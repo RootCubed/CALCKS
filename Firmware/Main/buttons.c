@@ -13,7 +13,7 @@
 
 void buttons_initialize() {
 	DDRD = BUTTONS_SR_DATA | BUTTONS_SR_CLEAR | BUTTONS_SR_CLK; // SR pins as output
-	DDRD &= ~BUTTONS_ROW_0 & ~BUTTONS_ROW_1; // rows as input
+	DDRD &= ~BUTTONS_ROW_0 & ~BUTTONS_ROW_1 & ~BUTTONS_FUNC_SWITCH; // rows as input
 
 	PORTD &= ~BUTTONS_SR_CLEAR; // clear SR
 	PORTD |= BUTTONS_SR_CLEAR;
@@ -40,6 +40,8 @@ int buttons_getPressed() {
 		}
 		BUTTONS_SR_PULSE();
 	}
-
-	return res;
+	if (res > -1) {
+		return res + (PIND & BUTTONS_FUNC_SWITCH) * 10;
+	}
+	return -1;
 }
