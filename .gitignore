@@ -1,0 +1,4 @@
+Firmware/.vs
+Firmware/*/Debug
+AdditionalPrograms/*/node_modules
+AdditionalPrograms/ImageConvert/*.h

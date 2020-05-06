@@ -1,0 +1,21 @@
+/*
+ * EEPROMLocs.h
+ *
+ * Created: 19.03.2020 23:20:42
+ *  Author: liamb
+ */ 
+
+
+#ifndef EEPROMLOCS_H_
+#define EEPROMLOCS_H_
+
+#define EEPROM_STARTUP 0
+#define EEPROM_STARTUP_LEN 1024
+
+#define EEPROM_FONT_6x7 (EEPROM_STARTUP + EEPROM_STARTUP_LEN)
+#define EEPROM_FONT_6x7_LEN (7 * 62)
+
+#define EEPROM_FONT_8x16 (EEPROM_FONT_6x7 + EEPROM_FONT_6x7_LEN)
+#define EEPROM_FONT_8x16_LEN (16 * 62)
+
+#endif /* EEPROMLOCS_H_ */
