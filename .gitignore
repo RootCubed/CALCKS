@@ -2,3 +2,5 @@ Firmware/.vs
 Firmware/*/Debug
 AdditionalPrograms/*/node_modules
 AdditionalPrograms/ImageConvert/*.h
+Hardware/CALCKS/fp-info-cache
+Hardware/CALCKS/*-bak
