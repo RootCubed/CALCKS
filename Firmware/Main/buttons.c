@@ -41,7 +41,7 @@ int buttons_getPressed() {
 		BUTTONS_SR_PULSE();
 	}
 	if (res > -1) {
-		return res + (PIND & BUTTONS_FUNC_SWITCH) * 10;
+		return res + ((PIND & BUTTONS_FUNC_SWITCH) ? 10 : 0);
 	}
 	return -1;
 }

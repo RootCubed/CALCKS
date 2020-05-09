@@ -61,9 +61,9 @@ void disp_drawChar(int xPos, int yPos, int num, int font) {
 		disp_command(0xB0 | yPos / 8); // set page
 		disp_command(0x10 | (xPos >> 4 & 0xF)); // set MSB of column address
 		disp_command(0x00 | (xPos      & 0xF)); // set LSB of column address
-		for (int col = 0; col < fontWidth; col++) {
+		for (int col = 1; col <= fontWidth; col++) {
 			char colBuf = 0;
-			for (int i = 0; i < 8; i++) {
+			for (int i = 0; i < (((yEnd - yPos) < 8) ? (yEnd - yPos) : 8); i++) {
 				int shift = fontWidth - col;
 				colBuf += ((tmp_chr[yPos - yStart + i] >> shift) & 1) << i;
 			}
