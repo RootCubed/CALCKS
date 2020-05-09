@@ -52,7 +52,7 @@ if (process.argv[3] == "fullscreen") {
 
 `;
     
-    header += `static const char FONT_${process.argv[4]}x${image.height}[][${image.height}] = {\n`;
+    header += `const __flash char FONT_${process.argv[4]}x${image.height}[][${image.height}] = {\n`;
     
     for (let character = 0; character < image.width; character += charWidth) {
         header += "\t{\n";
@@ -71,5 +71,5 @@ if (process.argv[3] == "fullscreen") {
     
     fs.writeFileSync(`font${process.argv[4]}x${image.height}.h`, header);
 } else {
-    console.log("Usage:\nnode makeHeader.js <file> fullscreen|image name|size");
+    console.log("Usage:\nnode makeHeader.js <file> fullscreen|font <image name>|<char width>");
 }
