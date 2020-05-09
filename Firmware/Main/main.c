@@ -59,9 +59,14 @@ int main(void) {
 }
 
 void buttonPressed(int buttonID) {
+	if (currLine[cursorX] == 255) {
+		for (int i = 0; i < 0x80; i++) currLine[i] = 0;
+		cursorX = 0;
+		disp_clear();
+	}
 	if (buttonID < 10) {
-		currLine[cursorX] = '0' + buttonID;
-		disp_drawChar(cursorX * 8, 0, currLine[cursorX] - '0', FNT_MD);
+		currLine[cursorX] = buttonID;
+		disp_drawChar(cursorX * 8, 0, currLine[cursorX], FNT_MD);
 		cursorX++;
 	} else {
 		if (buttonID < 14) {
@@ -70,6 +75,7 @@ void buttonPressed(int buttonID) {
 			cursorX++;
 		}
 		if (buttonID == 14) {
+			currLine[cursorX] = 255;
 			doCalculation(currLine, resBuf);
 			int i = 0;
 			while (resBuf[i] != 0) {
@@ -82,31 +88,43 @@ void buttonPressed(int buttonID) {
 
 void doCalculation(char* input, int* output) {
 	int i = 0;
-	int bufNum = 0;
-	int result = 0;
-// 	while (input[i] > 0) {
-// 		int numLength = 0;
-// 		while (input[i] < 10) numLength++, i++;
-// 		for (int j = 0; j < numLength; j++) {
-// 			bufNum += input[j] * pow(10, j);
-// 		}
-// 		switch (input[i]) {
-// 			case 10:
-// 				result += bufNum;
-// 				break;
-// 			case 11:
-// 				result -= bufNum;
-// 				break;
-// 			case 12:
-// 				result /= bufNum;
-// 				break;
-// 			case 13:
-// 				result *= bufNum;
-// 				break;
-// 		}
-// 		i++;
-// 	}
+	long result = 0;
+	int isFirstNum = 1;
+	while (input[i] != 255) {
+		long bufNum = 0;
+		int numLength = 0;
+		while (input[i] < 10) {
+			numLength++;
+			i++;
+		}
+		long power = pow(10, numLength);
+		for (int j = i - numLength; j < i; j++) {
+			bufNum += (int) input[j] * power;
+			power /= 10;
+		}
+		if (isFirstNum) {
+			result = bufNum;
+			isFirstNum = 0;
+		} else {
+			switch (input[i]) {
+				case 62:
+				result += bufNum;
+				break;
+				case 63:
+				result -= bufNum;
+				break;
+				case 64:
+				result /= bufNum;
+				break;
+				case 65:
+				result *= bufNum;
+				break;
+			}
+		}
+		i++;
+	}
 	int j = 0;
+	output[j] = 9;
 	while (result >= 0) {
 		output[j] = result % 10;
 		result /= 10;
