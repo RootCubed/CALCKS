@@ -78,7 +78,7 @@ void buttonPressed(int buttonID) {
 			currLine[cursorX] = 255;
 			doCalculation(currLine, resBuf);
 			int i = 0;
-			while (resBuf[i] != 0) {
+			while (resBuf[i] != 255) {
 				disp_drawChar(i * 8, 16, resBuf[i], FNT_MD);
 				i++;
 			}
@@ -86,51 +86,50 @@ void buttonPressed(int buttonID) {
 	}
 }
 
+long extrNum(char *input, int* pos) {
+	long bufNum = 0;
+	while (input[*pos] < 10) {
+		bufNum = (bufNum * 10) + input[*pos];
+		(*pos)++;
+	}
+	return bufNum;
+}
+
 void doCalculation(char* input, int* output) {
 	int i = 0;
 	long result = 0;
 	int isFirstNum = 1;
 	while (input[i] != 255) {
-		long bufNum = 0;
-		int numLength = 0;
-		while (input[i] < 10) {
-			numLength++;
-			i++;
-		}
-		long power = pow(10, numLength);
-		for (int j = i - numLength; j < i; j++) {
-			bufNum += (int) input[j] * power;
-			power /= 10;
-		}
-		if (isFirstNum) {
-			result = bufNum;
+		if (isFirstNum == 1) {
+			result = extrNum(input, &i);
 			isFirstNum = 0;
 		} else {
-			switch (input[i]) {
+			char operand = input[i];
+			i++;
+			long num2 = extrNum(input, &i);
+			switch (operand) {
 				case 62:
-				result += bufNum;
+				result += num2;
 				break;
 				case 63:
-				result -= bufNum;
+				result -= num2;
 				break;
 				case 64:
-				result /= bufNum;
+				result /= num2;
 				break;
 				case 65:
-				result *= bufNum;
+				result *= num2;
 				break;
 			}
 		}
-		i++;
 	}
-	int j = 0;
-	output[j] = 9;
-	while (result >= 0) {
-		output[j] = result % 10;
+	int len = floor(log10(result));
+	int p = 0;
+	do {
+		output[len - p] = result % 10;
 		result /= 10;
-		j++;
-		if (result == 0) break;
-	}
-	output[j] = 0;
+		p++;
+	} while (result > 0);
+	output[p] = 255;
 }
 
