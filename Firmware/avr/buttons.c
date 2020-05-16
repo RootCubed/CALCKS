@@ -7,9 +7,9 @@
 
 #define F_CPU 16000000L
 #include <util/delay.h>
-
 #include <avr/io.h>
-#include "buttons.h"
+
+#include "../common/buttons.h"
 
 void buttons_initialize() {
 	DDRD = BUTTONS_SR_DATA | BUTTONS_SR_CLEAR | BUTTONS_SR_CLK; // SR pins as output

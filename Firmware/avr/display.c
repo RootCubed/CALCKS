@@ -8,8 +8,8 @@
 #include <avr/io.h>
 #include <avr/eeprom.h>
 
-#include "display.h"
-#include "../EEPROM/eep.h"
+#include "../common/display.h"
+#include "../common/eep.h"
 
 unsigned char disp_eeprom_buf[1024];
 
@@ -74,7 +74,7 @@ void disp_drawChar(int xPos, int yPos, int num, int font) {
 }
 
 void disp_drawImage() {
-	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, 1024);
+	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, EEPROM_STARTUP_LEN);
     for (int page = 7; page >= 0; page--) {
         disp_command(DISP_CMD_PAGE | page); // set page
         disp_command(DISP_CMD_COL_MSB);

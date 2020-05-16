@@ -22,5 +22,8 @@
 
 void buttons_initialize();
 int buttons_getPressed();
+#ifdef console
+    void setButton(char);
+#endif
 
 #endif /* BUTTONS_H_ */

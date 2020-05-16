@@ -7,13 +7,34 @@
 
 #define F_CPU 16000000L
 
-#include <avr/io.h>
-#include <util/delay.h>
-#include <stdlib.h>
+#include "common/display.h"
+#include "common/buttons.h"
+#include "common/eep.h"
 
-#include "display.h"
-#include "buttons.h"
-#include "../EEPROM/eep.h"
+#include <math.h>
+
+#ifdef console
+	#include <windows.h>
+	#include <stdio.h>
+	#define _delay_ms Sleep
+	DWORD WINAPI ConsoleListener(void* data) {
+		while (1) {
+			char code = getchar();
+			if (code == 'g') {
+				disp_print();
+			}
+			if (code == 'b') {
+				char button;
+				scanf("%d", &button);
+				setButton(button);
+			}
+		}
+		return 0;
+	}
+#else
+	#include <avr/io.h>
+	#include <util/delay.h>
+#endif
 
 int cursorX = 0, cursorY = 0;
 char currLine[0x80] = "";
@@ -24,6 +45,9 @@ void buttonPressed(int);
 void doCalculation(char*, int*);
 
 int main(void) {
+	#ifdef console
+		CreateThread(NULL, 0, ConsoleListener, NULL, 0, NULL);
+	#endif
 	disp_initialize();
 	buttons_initialize();
 	eep_initialize();
@@ -33,7 +57,7 @@ int main(void) {
 	disp_drawImage();
 	
 	_delay_ms(2000);
-	
+
 	disp_clear();
 	
 	for (int i = 0; i < 70; i++) {
@@ -59,7 +83,7 @@ int main(void) {
 }
 
 void buttonPressed(int buttonID) {
-	if (currLine[cursorX] == 255) {
+	if (currLine[cursorX] == -1) {
 		for (int i = 0; i < 0x80; i++) currLine[i] = 0;
 		cursorX = 0;
 		disp_clear();
@@ -75,7 +99,7 @@ void buttonPressed(int buttonID) {
 			cursorX++;
 		}
 		if (buttonID == 14) {
-			currLine[cursorX] = 255;
+			currLine[cursorX] = -1;
 			doCalculation(currLine, resBuf);
 			int i = 0;
 			while (resBuf[i] != 255) {
@@ -88,7 +112,7 @@ void buttonPressed(int buttonID) {
 
 long extrNum(char *input, int* pos) {
 	long bufNum = 0;
-	while (input[*pos] < 10) {
+	while (input[*pos] > -1 && input[*pos] < 10) {
 		bufNum = (bufNum * 10) + input[*pos];
 		(*pos)++;
 	}
@@ -99,7 +123,7 @@ void doCalculation(char* input, int* output) {
 	int i = 0;
 	long result = 0;
 	int isFirstNum = 1;
-	while (input[i] != 255) {
+	while (input[i] > -1) {
 		if (isFirstNum == 1) {
 			result = extrNum(input, &i);
 			isFirstNum = 0;

@@ -9,6 +9,8 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
+#include "eep.h"
+
 #define DISP_INIT_LEN 15
 
 #define DISP_CS _BV(PORTB2)
@@ -49,6 +51,10 @@ void disp_command(char);
 void disp_data(char);
 
 void disp_sendByte(char);
+
+#ifdef console
+    void disp_print();
+#endif
 
 static const char disp_initSequence[DISP_INIT_LEN] = {
     DISP_CMD_START_LINE,            // Start at line 0

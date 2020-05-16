@@ -1,6 +1,13 @@
 Firmware/.vs
 Firmware/*/Debug
+Firmware/*.o
+Firmware/*.map
+Firmware/*.hex
+Firmware/*.elf
+Firmware/server/node_modules
 AdditionalPrograms/*/node_modules
 AdditionalPrograms/ImageConvert/*.h
+AdditionalPrograms/ImageConvert/*.bin
 Hardware/CALCKS/fp-info-cache
 Hardware/CALCKS/*-bak
+AdditionalPrograms/Buchhaltung.xlsx

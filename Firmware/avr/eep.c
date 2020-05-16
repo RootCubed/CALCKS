@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-#include "eep.h"
+#include "../common/eep.h"
 
 #define F_CPU 16000000UL
 #define BAUD 9600
@@ -21,6 +21,8 @@
 
 char lolBuf[256];
 char flBuf[5];
+
+int counter = 0;
 
 void uart_init(void) {
 	UBRR0H = UBRRH_VALUE;
@@ -36,7 +38,7 @@ void uart_init(void) {
 	UCSR0B = _BV(RXEN0) | _BV(TXEN0);   /* Enable RX and TX */
 }
 
-void uart_putchar(char c) {
+void uart_putbyte(char c) {
 	loop_until_bit_is_set(UCSR0A, UDRE0);
 	UDR0 = c;
 }
@@ -44,7 +46,7 @@ void uart_putchar(char c) {
 void uart_print(const char *str) {
 	int ptr = 0;
 	while (str[ptr] != '\0') {
-		uart_putchar(str[ptr]);
+		uart_putbyte(str[ptr]);
 		ptr++;
 	}
 }
@@ -88,7 +90,7 @@ void i2c_end() {
 	TWCR = ((1 << TWINT) | (1 << TWEN) | (1 << TWSTO));
 }
 
-void eep_write_block(const __flash char *src, int position, int length) {
+void eep_write_block(const char *src, int position, int length) {
 	int lengthOld = length;
 	uart_print("\r\nstart\r\n");
 	int arrPos = 0;
@@ -111,7 +113,7 @@ void eep_write_block(const __flash char *src, int position, int length) {
 		arrPos += numBytes;
 		_delay_ms(10);
 	}
-	uart_print("\nend\n");
+	uart_print("\r\nend\r\n");
 }
 
 void eep_read_block(void *dst, int position, int length) {
