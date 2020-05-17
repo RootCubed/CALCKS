@@ -32,6 +32,9 @@ eepromprog.hex: pre-avr eepromprog.o $(avr-files)
 	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
 	$(OBJCOPY) -O ihex eepromprog.elf eepromprog.hex
 
+server/eepromdata.bin: eepromgen/*.png
+	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
+
 eeprom: server/eepromdata.bin eepromprog.hex
 	$(AVRDUDE) -v -patmega328p -carduino -PCOM3 -b115200 -D -Uflash:w:"eepromprog.hex":i
 	node binsend/transferdata.js server/eepromdata.bin
