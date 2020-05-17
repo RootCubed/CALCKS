@@ -38,6 +38,11 @@ void uart_init(void) {
 	UCSR0B = _BV(RXEN0) | _BV(TXEN0);   /* Enable RX and TX */
 }
 
+char uart_getbyte() {
+	loop_until_bit_is_set(UCSR0A, RXC0);
+	return UDR0;
+}
+
 void uart_putbyte(char c) {
 	loop_until_bit_is_set(UCSR0A, UDRE0);
 	UDR0 = c;
@@ -92,7 +97,6 @@ void i2c_end() {
 
 void eep_write_block(const char *src, int position, int length) {
 	int lengthOld = length;
-	uart_print("\r\nstart\r\n");
 	int arrPos = 0;
 	while (length > 0) {
 		i2c_begin();
@@ -113,7 +117,6 @@ void eep_write_block(const char *src, int position, int length) {
 		arrPos += numBytes;
 		_delay_ms(10);
 	}
-	uart_print("\r\nend\r\n");
 }
 
 void eep_read_block(void *dst, int position, int length) {

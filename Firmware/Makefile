@@ -7,7 +7,7 @@ avr-files = avr/buttons.o avr/display.o avr/eep.o
 common-files := common/*.h
 console-files := console/buttons.o console/display.o console/eep.o
 
-default: avr upload clean
+default: eeprom upload clean
 
 %.o: %.c
 	$(CC) -c $^ $(CCFLAGS)
@@ -28,7 +28,15 @@ avr: pre-avr main.o $(avr-files)
 console: pre-console main.o $(console-files)
 	$(CC) -o server/calc.exe main.o $(subst console/,,$(console-files))
 
-upload:
+eepromprog.hex: pre-avr eepromprog.o $(avr-files)
+	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
+	$(OBJCOPY) -O ihex eepromprog.elf eepromprog.hex
+
+eeprom: server/eepromdata.bin eepromprog.hex
+	$(AVRDUDE) -v -patmega328p -carduino -PCOM3 -b115200 -D -Uflash:w:"eepromprog.hex":i
+	node binsend/transferdata.js server/eepromdata.bin
+
+upload: avr
 	$(AVRDUDE) -v -patmega328p -carduino -PCOM3 -b115200 -D -Uflash:w:"main.hex":i
 
 clean:

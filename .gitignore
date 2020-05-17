@@ -1,3 +1,4 @@
+.vscode/
 Firmware/.vs
 Firmware/*/Debug
 Firmware/*.o
@@ -5,6 +6,7 @@ Firmware/*.map
 Firmware/*.hex
 Firmware/*.elf
 Firmware/server/node_modules
+Firmware/binsend/node_modules
 AdditionalPrograms/*/node_modules
 AdditionalPrograms/ImageConvert/*.h
 AdditionalPrograms/ImageConvert/*.bin
