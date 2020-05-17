@@ -35,14 +35,14 @@ io.on("connection", socket => {
 
     runningCalcs[socket.id][2] = setInterval(() => {
         userCalc.stdin.write('g');
-    }, 3000);
+    }, 200);
 
     socket.on("button", socket => {
         if (socket != undefined) {
             console.log("button", socket, "was pressed!");
             userCalc.stdin.write('b');
             userCalc.stdin.write(socket.toString());
-            setTimeout(() => userCalc.stdin.write('g'), 50);
+            //setTimeout(() => userCalc.stdin.write('g'), 50);
         }
     });
 });
@@ -53,6 +53,11 @@ io.on("disconnect", socket => {
     userCalc.kill();
     runningCalcs[socket.id] = undefined;
 });
+
+app.use(function(req, res, next) {
+    res.setHeader("Access-Control-Allow-Origin", "http://calcks.parginli.ch");
+    next();
+  });
 
 app.use(express.static("static"));
 

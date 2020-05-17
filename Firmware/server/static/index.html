@@ -24,8 +24,26 @@
     </style>
 </head>
 <body>
+    <h1>CALCKS - Das Maturprojekt von Liam Braun</h1>
+    <h2>Links</h2>
+    <ul>
+        <li><a href="https://parginli.ch/maturprojekt">Offline-Version (hat noch ein Video der Hardware)</a></li>
+        <li><a href="https://github.com/LetsPlentendo-CH/CALCKS">GitHub-Repository</a></li>
+    </ul>
+    <h2>Online-Demo</h2>
+    <p>Der Code, der hier läuft, wurde für Windows mit fast denselben Quelldateien wie für das Hardwareprodukt kompiliert und wird auf dem Server ausgeführt und wird somit immer auf dem gleichen Stand sein wie der eigentliche Taschenrechner.
+        Der einzige Unterschied ist die Kommunikation mit den Hardwareschnittstellen (Display & Knöpfe).</p>
     <canvas id="calculator" width="128" height="64"></canvas>
-    <h2>CALCKS im Browser!</h2>
+    <button onclick='socket.emit("button", 0);'>0</button>
+    <button onclick='socket.emit("button", 1);'>1</button>
+    <button onclick='socket.emit("button", 2);'>2</button>
+    <button onclick='socket.emit("button", 3);'>3</button>
+    <button onclick='socket.emit("button", 4);'>4</button>
+    <button onclick='socket.emit("button", 5);'>5</button>
+    <button onclick='socket.emit("button", 6);'>6</button>
+    <button onclick='socket.emit("button", 7);'>7</button>
+    <button onclick='socket.emit("button", 8);'>8</button>
+    <button onclick='socket.emit("button", 9);'>9</button>
     <button onclick='socket.emit("button", 10);'>+</button>
     <button onclick='socket.emit("button", 11);'>-</button>
     <button onclick='socket.emit("button", 12);'>/</button>
