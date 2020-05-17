@@ -1,0 +1,16 @@
+[
+    {
+       "type": "fullscreen",
+       "file": "startup.png"
+    },
+    {
+       "type": "font",
+       "file": "font6x7.png",
+       "charWidth": "6"
+    },
+    {
+       "type": "font",
+       "file": "font8x16.png",
+       "charWidth": "8"
+    }
+ ]

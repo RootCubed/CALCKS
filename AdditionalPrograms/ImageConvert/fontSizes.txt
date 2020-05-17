@@ -1,7 +1,0 @@
-Font sizes:
-
-0-9, a-z, A-Z (10 + 26 + 26 = 62) chars
-
-4x5 (store as 1 byte x4): 248 bytes
-5x7 (store as 1 byte x5): 310 bytes
-7x10 (store as 1 byte x10): 620 bytes
