@@ -27,11 +27,18 @@
         
         #buttons {
             margin: 0 auto;
+            touch-action: manipulation; /* disable double-tap on mobile */
         }
 
         button {
             width: 100%;
             padding: 10px;
+            appearance: none;
+            -moz-appearance: none;
+            -webkit-appearance: none;
+            background-color: white;
+            border: 1px solid black;
+            font-size: 30px;
         }
 
         body {
