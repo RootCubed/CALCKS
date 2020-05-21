@@ -8,6 +8,8 @@ Firmware/*.elf
 Firmware/server/node_modules
 Firmware/binsend/node_modules
 Firmware/eepromgen/node_modules
+Firmware/server/calc.exe
+Firmware/server/eepromdata.bin
 AdditionalPrograms/*/node_modules
 Hardware/CALCKS/fp-info-cache
 Hardware/CALCKS/*-bak
