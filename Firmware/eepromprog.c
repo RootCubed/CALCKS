@@ -1,10 +1,3 @@
-/*
- * EEPROMWrite.c
- *
- * Created: 19.03.2020 18:08:41
- * Author : liamb
- */ 
-
 #define F_CPU 16000000L
 
 #include <avr/io.h>

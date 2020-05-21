@@ -1,10 +1,3 @@
-/*
- * Calculator.c
- *
- * Created: 19.03.2020 14:47:42
- * Author : liamb
- */
-
 #define F_CPU 16000000L
 
 #include "common/display.h"

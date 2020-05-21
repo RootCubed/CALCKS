@@ -1,11 +1,3 @@
-/*
- * EEPROMLocs.h
- *
- * Created: 19.03.2020 23:20:42
- *  Author: liamb
- */ 
-
-
 #ifndef EEPROMLOCS_H_
 #define EEPROMLOCS_H_
 

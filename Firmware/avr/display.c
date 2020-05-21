@@ -1,10 +1,3 @@
-/*
- * display.c
- *
- * Created: 19.03.2020 14:48:52
- *  Author: liamb
- */ 
-
 #include <avr/io.h>
 #include <avr/eeprom.h>
 

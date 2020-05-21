@@ -1,11 +1,3 @@
-/*
- * buttons.h
- *
- * Created: 20.03.2020 17:25:24
- *  Author: liamb
- */ 
-
-
 #ifndef BUTTONS_H_
 #define BUTTONS_H_
 

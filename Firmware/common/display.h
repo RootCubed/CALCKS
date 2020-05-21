@@ -1,11 +1,3 @@
-/*
- * display.h
- *
- * Created: 19.03.2020 14:49:02
- *  Author: liamb
- */ 
-
-
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 

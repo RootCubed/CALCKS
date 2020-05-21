@@ -1,11 +1,3 @@
-/*
- * eep.h
- *
- * Created: 20.03.2020 22:23:13
- *  Author: liamb
- */ 
-
-
 #ifndef EEP_H_
 #define EEP_H_
 

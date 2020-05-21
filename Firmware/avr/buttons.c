@@ -1,10 +1,3 @@
-/*
- * buttons.c
- *
- * Created: 20.03.2020 17:30:52
- *  Author: liamb
- */ 
-
 #define F_CPU 16000000L
 #include <util/delay.h>
 #include <avr/io.h>

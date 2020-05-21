@@ -1,10 +1,3 @@
-/*
- * eep.c
- *
- * Created: 20.03.2020 22:23:23
- *  Author: liamb
- */
-
 #define __AVR_ATmega328P__ 
 
 #include <avr/io.h>
