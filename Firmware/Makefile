@@ -4,8 +4,9 @@ AVRDUDE = avrdude
 SHELL=cmd
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
-common-files := common/*.h
-console-files := console/buttons.o console/display.o console/eep.o
+common-files = common/*.h
+common-obj = common/gui.o
+console-files = console/buttons.o console/display.o console/eep.o
 
 default: eeprom upload clean
 
@@ -15,18 +16,19 @@ default: eeprom upload clean
 pre-avr:
 	$(eval CC = avr-gcc)
 	$(eval MCU = atmega328p)
-	$(eval CCFLAGS = -std=c99 -mmcu=$(MCU) -O2)
+	$(eval CCFLAGS += -std=c99 -mmcu=$(MCU) -O2)
+	$(eval LDFLAGS = -Wl,-u,vfprintf -lprintf_flt -lm)
 
 pre-console:
 	$(eval CC = gcc)
 	$(eval CCFLAGS = -O0 -Dconsole -g)
 
-avr: pre-avr main.o $(avr-files)
-	$(CC) main.o $(subst avr/,,$(avr-files)) $(CCFLAGS) -lm -o main.elf
+avr: pre-avr main.o $(avr-files) $(common-obj)
+	$(CC) main.o $(subst avr/,,$(avr-files)) $(subst common/,,$(common-obj)) $(CCFLAGS) $(LDFLAGS) -lm -o main.elf
 	$(OBJCOPY) -O ihex main.elf main.hex
 	
-console: pre-console main.o $(console-files)
-	$(CC) -o server/calc.exe main.o $(subst console/,,$(console-files))
+console: pre-console main.o $(console-files) $(common-obj)
+	$(CC) -o server/calc.exe main.o $(subst console/,,$(console-files)) $(subst common/,,$(common-obj))
 
 eepromprog.hex: pre-avr eepromprog.o $(avr-files)
 	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
