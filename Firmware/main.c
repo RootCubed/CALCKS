@@ -62,7 +62,9 @@ int main(void) {
 	_delay_ms(2000);
 	
 	disp_clear();
-	gui_tabButton("Menu", 4);
+	int xTabPos = 4;
+	xTabPos += gui_tabButton("Menu", 4);
+	xTabPos += gui_tabButton("Graph", xTabPos + 2);
 	
 	while (1) {
 		int currButton = buttons_getPressed();

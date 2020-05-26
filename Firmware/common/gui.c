@@ -104,8 +104,9 @@ void gui_drawImage() {
     }
 }
 
-void gui_tabButton(const char *tabName, int xPos) {
+int gui_tabButton(const char *tabName, int xPos) {
     gui_drawByte(0b11111110, xPos, 56);
     int length = gui_drawString(tabName, xPos + 1, 57, FNT_SM, 1);
     gui_drawByte(0b11111110, xPos + 1 + length, 56);
+    return length + 2;
 }

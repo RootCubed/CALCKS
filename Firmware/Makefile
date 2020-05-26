@@ -29,6 +29,7 @@ avr: pre-avr main.o $(avr-files) $(common-obj)
 	
 console: pre-console main.o $(console-files) $(common-obj)
 	$(CC) -o server/calc.exe main.o $(subst console/,,$(console-files)) $(subst common/,,$(common-obj))
+	cd server & node server.js
 
 eepromprog.hex: pre-avr eepromprog.o $(avr-files)
 	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
