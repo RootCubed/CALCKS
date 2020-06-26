@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name Additional_Parts)(type Legacy)(uri ${KIPRJMOD}/Additional_Parts.lib)(options "")(descr ""))
+  (lib (name TL3301SPF260QG)(type Legacy)(uri "${KIPRJMOD}/Downloaded Footprints/TL3301SPF260QG.lib")(options "")(descr ""))
+)
