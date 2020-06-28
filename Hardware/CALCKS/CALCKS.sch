@@ -972,17 +972,6 @@ F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/20001984g.pdf" H 2150 1250 
 	1    2300 1300
 	1    0    0    -1  
 $EndComp
-$Comp
-L Connector:Conn_01x01_Male J4
-U 1 1 5F203408
-P 3050 1200
-F 0 "J4" H 3022 1224 50  0000 R CNN
-F 1 "Conn_01x01_Male" H 3022 1133 50  0000 R CNN
-F 2 "TestPoint:TestPoint_Pad_D3.0mm" H 3050 1200 50  0001 C CNN
-F 3 "~" H 3050 1200 50  0001 C CNN
-	1    3050 1200
-	-1   0    0    -1  
-$EndComp
 Wire Wire Line
 	2700 1200 2800 1200
 $Comp
@@ -1036,28 +1025,6 @@ Wire Wire Line
 Wire Wire Line
 	1600 1000 1700 1000
 $Comp
-L power:GND #PWR0102
-U 1 1 5F28F479
-P 1250 1700
-F 0 "#PWR0102" H 1250 1450 50  0001 C CNN
-F 1 "GND" H 1255 1527 50  0000 C CNN
-F 2 "" H 1250 1700 50  0001 C CNN
-F 3 "" H 1250 1700 50  0001 C CNN
-	1    1250 1700
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector:Conn_01x01_Male J3
-U 1 1 5F29013F
-P 2300 1900
-F 0 "J3" V 2454 1812 50  0000 R CNN
-F 1 "Conn_01x01_Male" V 2363 1812 50  0000 R CNN
-F 2 "TestPoint:TestPoint_Pad_D3.0mm" H 2300 1900 50  0001 C CNN
-F 3 "~" H 2300 1900 50  0001 C CNN
-	1    2300 1900
-	0    -1   -1   0   
-$EndComp
-$Comp
 L Device:C C1
 U 1 1 5F292FC0
 P 1700 1150
@@ -1078,8 +1045,6 @@ Wire Wire Line
 Connection ~ 1600 1700
 Wire Wire Line
 	1600 1700 1250 1700
-Connection ~ 1250 1700
-Connection ~ 2300 1700
 $Comp
 L power:GND #PWR0103
 U 1 1 5F2F2812
@@ -1091,7 +1056,6 @@ F 3 "" H 2100 7000 50  0001 C CNN
 	1    2100 7000
 	0    -1   -1   0   
 $EndComp
-Connection ~ 2850 1200
 Wire Wire Line
 	2100 2800 2200 2800
 Connection ~ 2200 2800
@@ -1151,8 +1115,6 @@ F 3 "~" H 3000 1550 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	2850 1200 2850 1550
-Text GLabel 3150 1550 2    50   Input ~ 0
-VCC
 Text GLabel 6700 2450 2    50   Input ~ 0
 VCC
 $Comp
@@ -1776,4 +1738,78 @@ Wire Wire Line
 Connection ~ 9700 6300
 Wire Wire Line
 	9700 6300 11000 6300
+Text Notes 1500 1900 0    50   ~ 0
+Current regulation:\n3.3k -> 303mA
+Text GLabel 3150 1550 2    50   Input ~ 0
+VCC
+$Comp
+L power:+BATT #PWR0109
+U 1 1 5EF8C1E9
+P 3050 1200
+F 0 "#PWR0109" H 3050 1050 50  0001 C CNN
+F 1 "+BATT" V 3065 1328 50  0000 L CNN
+F 2 "" H 3050 1200 50  0001 C CNN
+F 3 "" H 3050 1200 50  0001 C CNN
+	1    3050 1200
+	0    1    1    0   
+$EndComp
+Connection ~ 2850 1200
+Wire Wire Line
+	3050 1200 2850 1200
+$Comp
+L power:+BATT #PWR0111
+U 1 1 5EFF3135
+P 4650 1000
+F 0 "#PWR0111" H 4650 850 50  0001 C CNN
+F 1 "+BATT" H 4665 1173 50  0000 C CNN
+F 2 "" H 4650 1000 50  0001 C CNN
+F 3 "" H 4650 1000 50  0001 C CNN
+	1    4650 1000
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:-BATT #PWR0112
+U 1 1 5F053D34
+P 4400 1000
+F 0 "#PWR0112" H 4400 850 50  0001 C CNN
+F 1 "-BATT" H 4415 1173 50  0000 C CNN
+F 2 "" H 4400 1000 50  0001 C CNN
+F 3 "" H 4400 1000 50  0001 C CNN
+	1    4400 1000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x01_Male J3
+U 1 1 5F055712
+P 4400 1200
+F 0 "J3" V 4450 1350 50  0000 R CNN
+F 1 "Conn_01x01_Male" V 4350 1800 50  0000 R CNN
+F 2 "Connector_Wire:SolderWirePad_1x01_Drill1.2mm" H 4400 1200 50  0001 C CNN
+F 3 "~" H 4400 1200 50  0001 C CNN
+	1    4400 1200
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Connector:Conn_01x01_Male J4
+U 1 1 5F218788
+P 4650 1200
+F 0 "J4" V 4800 1400 50  0000 R CNN
+F 1 "Conn_01x01_Male" V 4700 1900 50  0000 R CNN
+F 2 "Connector_Wire:SolderWirePad_1x01_Drill1.2mm" H 4650 1200 50  0001 C CNN
+F 3 "~" H 4650 1200 50  0001 C CNN
+	1    4650 1200
+	0    1    -1   0   
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 5F3257DD
+P 4400 1000
+F 0 "#PWR0102" H 4400 750 50  0001 C CNN
+F 1 "GND" H 4300 850 50  0000 C CNN
+F 2 "" H 4400 1000 50  0001 C CNN
+F 3 "" H 4400 1000 50  0001 C CNN
+	1    4400 1000
+	0    1    1    0   
+$EndComp
+Connection ~ 4400 1000
 $EndSCHEMATC
