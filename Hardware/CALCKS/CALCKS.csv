@@ -1,0 +1,18 @@
+Reference, Quantity, Value, Footprint,Price,Total Price,Link
+C13 C12 ,2,30pF,Capacitor_SMD:C_0805_2012Metric,CHF 0.31,CHF 0.62,https://www.digikey.ch/product-detail/de/C0805C300J5GACTU/399-9219-1-ND/3522737/?itemSeq=330962089
+C2 C1 ,2,4.7uF,Capacitor_SMD:C_0805_2012Metric,CHF 0.61,CHF 1.22,https://www.digikey.ch/product-detail/de/GRM21BR71C475KE51L/490-14466-1-ND/6606927/?itemSeq=330491879
+C9 C5 C10 C6 C11 C4 C7 C8 C3 ,9,1uF,Capacitor_SMD:C_0805_2012Metric,CHF 0.09,CHF 0.81,https://www.digikey.ch/product-detail/de/C0805C105Z4VACTU/399-8011-1-ND/3471734/?itemSeq=330702702
+D1 ,1,D,Diode_SMD:D_SOD-323,CHF 0.19,CHF 0.19,https://www.digikey.ch/product-detail/de/BAT54HT1G/BAT54HT1GOSCT-ND/917809/?itemSeq=330537086
+DS1 ,1,DOGM128-6,CALCKS:LCD_DOGM128-6,CHF 17.65,CHF 17.65,https://ch.elv.com/electronic-assembly-lcd-grafikdisplay-ea-dogm128-128x64-pixel-fstn-schwarzweiss-129718
+J1 ,1,Conn_02x03_Counter_Clockwise,Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical,CHF 0.23,CHF 0.23,https://www.digikey.ch/product-detail/de/M20-9980346/952-2121-ND/3728085/?itemSeq=330702734
+J2 ,1,USB_B_Micro,Connector_USB:USB_Micro-B_Wuerth_629105150521,CHF 2.01,CHF 2.01,https://www.digikey.ch/product-detail/de/629105150521/732-5960-1-ND/5047555/?itemSeq=330702735
+R1 ,1,3.3k,Resistor_SMD:R_0805_2012Metric,CHF 0.10,CHF 0.10,https://www.digikey.ch/product-detail/de/CRGCQ0805F3K3/A129755CT-ND/8577587/?itemSeq=330972993
+R5 R4 R3 R6 R2 ,5,220,Resistor_SMD:R_0805_2012Metric,CHF 0.10,CHF 0.50,https://www.digikey.ch/product-detail/de/CRGCQ0805F220R/A129741CT-ND/8577573/?itemSeq=330702782
+SW1 SW9 SW17 SW25 SW34 SW2 SW10 SW18 SW26 SW33 SW3 SW11 SW19 SW27 SW35 SW4 SW12 SW20 SW28 SW36 SW5 SW13 SW21 SW29 SW37 SW6 SW14 SW22 SW30 SW38 SW7 SW15 SW23 SW31 SW39 SW8 SW16 SW24 SW32 SW40 ,40,SW_Push_Dual,Downloaded Footprints:SW_TL3301SPF260QG,CHF 0.36,CHF 14.40,https://www.digikey.ch/product-detail/de/TL3301SPF260QG/EG1870CT-ND/271567/?itemSeq=330676640
+U1 ,1,ATmega1284-AU,Package_QFP:TQFP-44_10x10mm_P0.8mm,CHF 4.62,CHF 4.62,https://www.digikey.ch/product-detail/de/ATMEGA1284-AU/ATMEGA1284-AU-ND/2271240/?itemSeq=330702788
+U2 ,1,MCP73831-2-OT,Package_TO_SOT_SMD:SOT-23-5,CHF 0.54,CHF 0.54,https://www.digikey.ch/product-detail/de/MCP73831T-2ACI%2fOT/MCP73831T-2ACI%2fOTCT-ND/1979802/?itemSeq=330702840
+U3 ,1,AT24CS64-SSHM,Package_SO:SOIC-8_3.9x4.9mm_P1.27mm,CHF 0.38,CHF 0.38,https://www.digikey.ch/product-detail/de/AT24CS64-SSHM-T/AT24CS64-SSHM-TCT-ND/4292119/?itemSeq=330702854
+U4 ,1,74HC164,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,CHF 0.34,CHF 0.34,https://www.digikey.ch/product-detail/de/SN74HC164DR/296-14838-1-ND/562706/?itemSeq=330538749
+Y1 ,1,8MHz,Crystal:Crystal_SMD_HC49-SD,CHF 0.31,CHF 0.31,https://www.digikey.ch/product-detail/de/FC4SDCBMF8.0-T1/631-1010-1-ND/1024715/?itemSeq=330705562
+Battery,1,115 mAh,,CHF 10.85,CHF 10.85,https://ch.elv.com/renata-lithium-polymer-akku-mit-schutzschaltung-icp501421ps-37-v-115-mah-120227?fs=2608319030&c=950
+,,,,,CHF 54.77,

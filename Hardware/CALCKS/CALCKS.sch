@@ -1131,8 +1131,6 @@ $EndComp
 Text GLabel 2350 2800 2    50   Input ~ 0
 VCC
 Wire Wire Line
-	2200 2800 2200 3000
-Wire Wire Line
 	2100 2800 2100 3000
 Wire Wire Line
 	6200 2950 6100 2950
@@ -1236,8 +1234,6 @@ Wire Wire Line
 Connection ~ 3950 4800
 Wire Wire Line
 	3950 4800 3950 5000
-Text GLabel 3500 5400 3    50   Input ~ 0
-VCC
 Wire Wire Line
 	3100 5000 3100 4800
 Wire Wire Line
@@ -1600,23 +1596,10 @@ F 3 "" H 5800 6050 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	2700 1400 2700 1700
-Wire Wire Line
-	2700 1700 3050 1700
 Text GLabel 3050 1700 2    50   Input ~ 0
 BATT_STATUS
 Text GLabel 2700 4200 2    50   Input ~ 0
 BATT_STATUS
-$Comp
-L Device:Crystal Y1
-U 1 1 603ADCA6
-P 1250 3600
-F 0 "Y1" V 1300 3400 50  0000 L CNN
-F 1 "8MHz" V 1200 3200 50  0000 L CNN
-F 2 "Crystal:Crystal_SMD_HC49-SD" H 1250 3600 50  0001 C CNN
-F 3 "~" H 1250 3600 50  0001 C CNN
-	1    1250 3600
-	0    1    -1   0   
-$EndComp
 Wire Wire Line
 	1250 3450 1450 3450
 Wire Wire Line
@@ -1812,4 +1795,69 @@ F 3 "" H 4400 1000 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 Connection ~ 4400 1000
+$Comp
+L Device:Crystal Y1
+U 1 1 603ADCA6
+P 1250 3600
+F 0 "Y1" V 1300 3400 50  0000 L CNN
+F 1 "8MHz" V 1200 3200 50  0000 L CNN
+F 2 "Crystal:Crystal_SMD_HC49-SD" H 1250 3600 50  0001 C CNN
+F 3 "~" H 1250 3600 50  0001 C CNN
+	1    1250 3600
+	0    1    -1   0   
+$EndComp
+$Comp
+L Device:C C13
+U 1 1 5EFDD062
+P 1100 3900
+F 0 "C13" H 986 3854 50  0000 R CNN
+F 1 "30pF" H 1050 4000 50  0000 R CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 1138 3750 50  0001 C CNN
+F 3 "~" H 1100 3900 50  0001 C CNN
+	1    1100 3900
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	1250 3450 1100 3450
+Connection ~ 1250 3450
+Wire Wire Line
+	1250 3750 1100 3750
+Connection ~ 1250 3750
+Wire Wire Line
+	1100 3150 800  3150
+Wire Wire Line
+	800  3150 800  3600
+Wire Wire Line
+	800  4050 1100 4050
+$Comp
+L power:GND #PWR0110
+U 1 1 5F0676F1
+P 800 3600
+F 0 "#PWR0110" H 800 3350 50  0001 C CNN
+F 1 "GND" V 805 3472 50  0000 R CNN
+F 2 "" H 800 3600 50  0001 C CNN
+F 3 "" H 800 3600 50  0001 C CNN
+	1    800  3600
+	0    1    1    0   
+$EndComp
+Connection ~ 800  3600
+Wire Wire Line
+	800  3600 800  4050
+Text GLabel 3500 5400 3    50   Input ~ 0
+VCC
+Wire Wire Line
+	2200 2800 2200 3000
+$Comp
+L Device:C C12
+U 1 1 5EFDC2E9
+P 1100 3300
+F 0 "C12" H 986 3254 50  0000 R CNN
+F 1 "30pF" H 1050 3400 50  0000 R CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 1138 3150 50  0001 C CNN
+F 3 "~" H 1100 3300 50  0001 C CNN
+	1    1100 3300
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	2700 1700 3050 1700
 $EndSCHEMATC
