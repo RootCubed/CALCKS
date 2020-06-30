@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source C:\Users\liamb\Documents\Programming\Maturprojekt\CALCKS\Hardware\CALCKS\CALCKS.sch)
-    (date "06/26/20 19:54:30")
+    (date "06/28/20 13:54:53")
     (tool "Eeschema (5.1.5)-3")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -470,7 +470,7 @@
       (sheetpath (names /) (tstamps /))
       (tstamp 5F4DCEFA))
     (comp (ref Y1)
-      (value 16MHz)
+      (value 8MHz)
       (footprint Crystal:Crystal_SMD_HC49-SD)
       (datasheet ~)
       (libsource (lib Device) (part Crystal) (description "Two pin crystal"))
