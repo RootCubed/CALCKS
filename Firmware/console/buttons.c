@@ -5,7 +5,7 @@ char buttonBuffer = -1;
 
 void buttons_initialize() {}
 
-void setButton(char btn) {
+void set_button(char btn) {
     buttonBuffer = btn;
 }
 

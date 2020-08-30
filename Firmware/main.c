@@ -48,23 +48,23 @@ int main(void) {
 	
 	disp_clear();
 
-	gui_drawImage();
+	gui_draw_image();
 	
 	_delay_ms(2000);
 
 	disp_clear();
 	
 	/*for (int i = 0; i < 70; i++) {
-		gui_drawChar((i * 8) % 128, i / 16 * 16, i, FNT_SM, 0);
+		gui_draw_char((i * 8) % 128, i / 16 * 16, i, FNT_SM, 0);
 	}*/
-	gui_drawString("Test String", 0, 0, FNT_SM, 0);
+	gui_draw_string("Test String", 0, 0, FNT_SM, 0);
 	
 	_delay_ms(2000);
 	
 	disp_clear();
 	int xTabPos = 4;
-	xTabPos += gui_tabButton("Menu", 4);
-	xTabPos += gui_tabButton("Graph", xTabPos + 2);
+	xTabPos += gui_tab_button("Menu", 4);
+	xTabPos += gui_tab_button("Graph", xTabPos + 2);
 	
 	while (1) {
 		int currButton = buttons_getPressed();
@@ -88,18 +88,18 @@ void buttonPressed(int buttonID) {
 	}
 	if (buttonID < 10) {
 		currLine[cursorX] = buttonID;
-		gui_drawChar(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
+		gui_draw_char(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
 		cursorX++;
 	} else {
 		if (buttonID < 14) {
 			currLine[cursorX] = 62 - 10 + buttonID;
-			gui_drawChar(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
+			gui_draw_char(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
 			cursorX++;
 		}
 		if (buttonID == 14) {
 			currLine[cursorX] = -1;
 			doCalculation(currLine, resBuf);
-			gui_drawString(resBuf, 0, 16, FNT_MD, 0);
+			gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 		}
 	}
 }
