@@ -4,46 +4,61 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUT_LENGTH 9
-u8 input[] = {NUM_1, OP_PLUS, NUM_2, NUM_8, OP_MULT, NUM_7, OP_PLUS, NUM_3, NUM_3, CHAR_END};
+u8 input[] = {NUM_8, OP_MULT, NUM_2, NUM_8, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_MINUS, NUM_3, OP_MULT, NUM_2, OP_PLUS, NUM_3, NUM_8, NUM_8, CHAR_END};
 
 opNode* node_stack_pop(opStack* stack) {
-    opStackNode* first = stack->first;
-    opNode* opPtr = first->ptr;
-    opStackNode* second = first->next;
-    free(first);
-    stack->first = second;
+    opStackNode* top = stack->top;
+    opNode* opPtr = top->ptr;
+    opStackNode* second = top->next;
+    free(top);
+    stack->top = second;
     if (second != NULL) {
         second->prev = NULL;
     }
     return opPtr;
 }
 
+void node_stack_remove(opStack* stack, opStackNode* node) {
+    if (node->next != NULL) {
+        node->next->prev = node->prev;
+    }
+    if (node->prev != NULL) {
+        node->prev->next = node->next;
+    } else {
+        if (node->next != NULL) {
+            stack->top = node->next;
+        } else {
+            stack->top = NULL;
+        }
+    }
+    free(node);
+}
+
 void node_stack_push(opStack* stack, opNode* toInsert) {
     opStackNode* newNode = (opStackNode *) malloc(sizeof(opStackNode));
     memset(newNode, 0, sizeof(opStackNode));
     newNode->ptr = toInsert;
-    if (stack->first != NULL) {
-        newNode->next = stack->first;
+    if (stack->top != NULL) {
+        newNode->next = stack->top;
     } else {
         newNode->next = NULL;
     }
     newNode->prev = NULL;
 
-    opStackNode* first = stack->first;
-    if (first != NULL) {
-        first->prev = newNode;
+    opStackNode* top = stack->top;
+    if (top != NULL) {
+        top->prev = newNode;
     }
-    stack->first = newNode;
+    stack->top = newNode;
 }
 
 int node_stack_is_empty(opStack* stack) {
-    return stack->first == NULL;
+    return stack->top == NULL;
 }
 
 int node_stack_length(opStack* stack) {
     int counter = 0;
-    opStackNode* current = stack->first;
+    opStackNode* current = stack->top;
     while (current != NULL) {
         counter++;
         current = current->next;
@@ -67,19 +82,30 @@ void print_node(opNode* n) {
             strcpy(opNameBuf, "div");
             break;
     }
-    printf("%s[", opNameBuf);
+    printf("%s(", opNameBuf);
     if (n->usedOperands & 0b01) {
-        printf("%d, ", n->val1);
+        printf("%ld, ", n->val1);
     } else {
         print_node(n->op1);
         printf(", ");
     }
     if (n->usedOperands & 0b10) {
-        printf("%d", n->val2);
+        printf("%ld", n->val2);
     } else {
         print_node(n->op2);
     }
-    printf("]");
+    printf(")");
+}
+
+void term_free(opNode* node) {
+    opNode currNode = *node;
+    if ((currNode.usedOperands & 0b01) == 0) {
+        term_free(currNode.op1);
+    }
+    if ((currNode.usedOperands & 0b10) == 0) {
+        term_free(currNode.op2);
+    }
+    free(node);
 }
 
 opNode* parse_term(u8* input) {
@@ -103,23 +129,58 @@ opNode* parse_term(u8* input) {
                 currOp->val1 = currNum;
                 currOp->usedOperands |= 0b01;
                 if (!node_stack_is_empty(&stack)) {
-                    opStackNode* currOpInStack = stack.first;
-                    while (currOpInStack != NULL) {
-                        opNode* opInStack = currOpInStack->ptr;
-                        if (PRECEDENCE[currOp->operation] >= PRECEDENCE[opInStack->operation]) {
-                            break;
-                        }
-                        opNode* poppedNode = node_stack_pop(&stack);
-                        poppedNode->parent = currOp;
-                        poppedNode->val2 = currNum;
-                        poppedNode->usedOperands |= 0b10;
-                        currOp->op1 = poppedNode;
+                    int currOpPre = PRECEDENCE[currOp->operation];
+                    if (currOpPre > PRECEDENCE[stack.top->ptr->operation]) {
+                        // if the precedence of the new operator is higher, leave the stack as-is
+                    } else {
+                        // first, find the node furthest back that still has higher precedence
+                        opStackNode* currOpInStack = stack.top;
+                        while (currOpInStack->next != NULL && currOpPre <= PRECEDENCE[currOpInStack->next->ptr->operation]) currOpInStack = currOpInStack->next;
+                        // connect currOp to that node
+                        currOpInStack->ptr->parent = currOp;
+                        currOp->op1 = currOpInStack->ptr;
                         currOp->usedOperands &= ~0b01;
-                        currOpInStack = stack.first;
+                        // now, while traversing the stack upwards, connect the nodes with eachother
+                        while (currOpInStack != NULL) {
+                            opStackNode* nextOpInStack = currOpInStack->prev;
+                            if (nextOpInStack == NULL) break;
+                            nextOpInStack->ptr->parent = currOpInStack->ptr;
+                            currOpInStack->ptr->op2 = nextOpInStack->ptr;
+                            currOpInStack->ptr->usedOperands &= ~0b10;
+                            node_stack_remove(&stack, currOpInStack);
+                            currOpInStack = nextOpInStack;
+                        }
+                        // finally, add the constant value as val2 on the last operation in the stack
+                        currOpInStack->ptr->val2 = currNum;
+                        currOpInStack->ptr->usedOperands |= 0b10;
+                        node_stack_remove(&stack, currOpInStack);
                     }
                 }
                 node_stack_push(&stack, currOp);
                 currNum = 0;
+                printf("Current stack: ");
+                opStackNode* curr = stack.top;
+                char opNameBuf[16];
+                while (curr != NULL) {
+                    switch(curr->ptr->operation) {
+                        case 0:
+                            strcpy(opNameBuf, "+");
+                            break;
+                        case 1:
+                            strcpy(opNameBuf, "-");
+                            break;
+                        case 2:
+                            strcpy(opNameBuf, "*");
+                            break;
+                        case 3:
+                            strcpy(opNameBuf, "/");
+                            break;
+                    }
+                    printf("%s ", opNameBuf);
+                    curr = curr->next;
+                }
+                printf("\n");
+                break;
         }
         pos++;
     }
@@ -136,6 +197,34 @@ opNode* parse_term(u8* input) {
     }
     printf("Traversing nodes:\n");
     print_node(currOp);
+    printf("\n");
+    return currOp;
+}
+
+double evaluate_term(opNode* startNode) {
+    opNode currNode = *startNode;
+    double value1;
+    if (currNode.usedOperands & 0b01) {
+        value1 = currNode.val1;
+    } else {
+        value1 = evaluate_term(currNode.op1);
+    }
+    double value2;
+    if (currNode.usedOperands & 0b10) {
+        value2 = currNode.val2;
+    } else {
+        value2 = evaluate_term(currNode.op2);
+    }
+    switch (currNode.operation) {
+        case 0:
+            return value1 + value2;
+        case 1:
+            return value1 - value2;
+        case 2:
+            return value1 * value2;
+        case 3:
+            return value1 / value2;
+    }
 }
 
 symbolField getFields(u8 symbol) {
@@ -167,9 +256,13 @@ void print_char_console(u8 input) {
 }
 
 int main(int argc, char** argv) {
-    for (int i = 0; i < INPUT_LENGTH; i++) {
+    int i = 0;
+    while (input[i] != CHAR_END) {
         print_char_console(input[i]);
+        i++;
     }
     printf("\n");
-    parse_term(input);
+    opNode* term = parse_term(input);
+    printf("res = %f\n", evaluate_term(term));
+    term_free(term);
 }
