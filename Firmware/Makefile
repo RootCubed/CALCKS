@@ -15,7 +15,7 @@ default: eeprom upload clean
 
 pre-avr:
 	$(eval CC = avr-gcc)
-	$(eval MCU = atmega328p)
+	$(eval MCU = atmega1284p)
 	$(eval CCFLAGS += -std=c99 -mmcu=$(MCU) -O2)
 	$(eval LDFLAGS = -Wl,-u,vfprintf -lprintf_flt -lm)
 
@@ -38,12 +38,11 @@ eepromprog.hex: pre-avr eepromprog.o $(avr-files)
 server/eepromdata.bin: eepromgen/*.png
 	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
 
-eeprom: server/eepromdata.bin eepromprog.hex
-	$(AVRDUDE) -v -patmega328p -carduino -PCOM3 -b115200 -D -Uflash:w:"eepromprog.hex":i
-	node binsend/transferdata.js server/eepromdata.bin
+eeprom: server/eepromdata.bin
+	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 19200 -e -D -U eeprom:w:"server/eepromdata.bin":r
 
 upload: avr
-	$(AVRDUDE) -v -patmega328p -carduino -PCOM3 -b115200 -D -Uflash:w:"main.hex":i
+	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 19200 -D -U flash:w:"main.hex":i
 
 clean:
 	rm *.o

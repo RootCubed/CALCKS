@@ -13,6 +13,8 @@
 #include <util/delay.h>
 #include <util/setbaud.h>
 
+#include <avr/eeprom.h>
+
 char lolBuf[256];
 char flBuf[5];
 
@@ -86,7 +88,8 @@ void i2c_end() {
 }
 
 void eep_write_block(const char *src, int position, int length) {
-	int lengthOld = length;
+	eeprom_write_block((unsigned int *) position, (char *) src, length);
+	/*int lengthOld = length;
 	int arrPos = 0;
 	while (length > 0) {
 		i2c_begin();
@@ -106,11 +109,12 @@ void eep_write_block(const char *src, int position, int length) {
 		position += 8;
 		arrPos += numBytes;
 		_delay_ms(10);
-	}
+	}*/
 }
 
 void eep_read_block(void *dst, int position, int length) {
-	i2c_begin();
+	eeprom_read_block(dst, (unsigned int *) position, length);
+	/*i2c_begin();
 	i2c_write(0b10100000 | TW_WRITE);
 	i2c_write(position >> 8); // MSB
 	i2c_write(position & 0xFF); // LSB
@@ -123,5 +127,5 @@ void eep_read_block(void *dst, int position, int length) {
 		}
 		((char *)dst)[i] = i2c_read(sendNAK);
 	}
-	i2c_end();
+	i2c_end();*/
 }

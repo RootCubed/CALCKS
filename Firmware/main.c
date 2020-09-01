@@ -1,4 +1,4 @@
-#define F_CPU 16000000L
+#define F_CPU 8000000L
 
 #include "common/display.h"
 #include "common/buttons.h"
@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef console
 	#include <windows.h>
@@ -42,8 +43,8 @@ int main(void) {
 	#ifdef console
 		CreateThread(NULL, 0, ConsoleListener, NULL, 0, NULL);
 	#endif
-	disp_initialize();
 	buttons_initialize();
+	disp_initialize();
 	eep_initialize();
 	
 	disp_clear();
@@ -51,23 +52,27 @@ int main(void) {
 	gui_drawImage();
 	
 	_delay_ms(2000);
-
-	disp_clear();
 	
-	/*for (int i = 0; i < 70; i++) {
+	for (int i = 0; i < 70; i++) {
 		gui_drawChar((i * 8) % 128, i / 16 * 16, i, FNT_SM, 0);
-	}*/
-	gui_drawString("Test String", 0, 0, FNT_SM, 0);
-	
-	_delay_ms(2000);
+	}
 	
 	disp_clear();
+	buttons_initialize();
 	int xTabPos = 4;
 	xTabPos += gui_tabButton("Menu", 4);
 	xTabPos += gui_tabButton("Graph", xTabPos + 2);
+
+	int count = 0;
+	char countStrBuf[16];
+
 	
 	while (1) {
-		int currButton = buttons_getPressed();
+		int btnUnmapped = buttons_getPressed();
+		int currButton = -1;
+		if (btnUnmapped > -1) {
+			currButton = BUTTON_MAP[btnUnmapped];
+		}
 		if (currButton != -1) {
 			if (currButton != lastButton) {
 				lastButton = currButton;

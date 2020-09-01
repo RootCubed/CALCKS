@@ -5,11 +5,11 @@
 
 #define DISP_INIT_LEN 15
 
-#define DISP_CS _BV(PORTB2)
-#define DISP_RESET _BV(PORTB4)
-#define DISP_A0 _BV(PORTB1)
-#define DISP_SCL _BV(PORTB5)
-#define DISP_SI _BV(PORTB3)
+#define DISP_CS _BV(PORTB5)
+#define DISP_RESET _BV(PORTB3)
+#define DISP_A0 _BV(PORTB7)
+#define DISP_SCL _BV(PORTB4)
+#define DISP_SI _BV(PORTB6)
 
 // commands
 #define DISP_CMD_ONOFF 0xAE
@@ -46,14 +46,16 @@ void disp_data(char);
 
 void disp_sendByte(char);
 
+void disp_show();
+
 #ifdef console
     void disp_print();
 #endif
 
 static const char disp_initSequence[DISP_INIT_LEN] = {
     DISP_CMD_START_LINE,            // Start at line 0
-    DISP_CMD_ADC | 1,               // ADC reverse -> right to left
-    DISP_CMD_COM_OUT_DIR,           // Select regular common output
+    DISP_CMD_ADC,                   // ADC normal -> left to right
+    DISP_CMD_COM_OUT_DIR | 0b1000,  // Select reverse common output
     DISP_CMD_DISP_DIR,              // Set Display direction normal
     DISP_CMD_LCD_BIAS,              // Set bias 1/9 - duty 1/65
     DISP_CMD_POWER_CTRL | 0b111,    // Power control: Booster on, Regulator on, Follower on
