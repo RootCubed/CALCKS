@@ -5,7 +5,7 @@ SHELL=cmd
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
 common-files = common/*.h
-common-obj = common/gui.o
+common-obj = common/gui.o common/term.o
 console-files = console/buttons.o console/display.o console/eep.o
 
 default: eeprom upload clean
@@ -39,10 +39,10 @@ server/eepromdata.bin: eepromgen/*.png
 	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
 
 eeprom: server/eepromdata.bin
-	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 57600 -e -D -U eeprom:w:"server/eepromdata.bin":r
+	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 57600 -U eeprom:w:"server/eepromdata.bin":r
 
 upload: avr
-	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 57600 -D -U flash:w:"main.hex":i
+	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 57600 -U flash:w:"main.hex":i
 
 clean:
 	rm *.o
