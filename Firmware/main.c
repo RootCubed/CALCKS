@@ -4,6 +4,7 @@
 #include "common/buttons.h"
 #include "common/eep.h"
 #include "common/gui.h"
+#include "common/term.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -32,12 +33,12 @@
 #endif
 
 int cursorX = 0, cursorY = 0;
-char currLine[0x80] = "";
-char resBuf[0x80];
+char currLine[0x20] = "";
+char resBuf[0x20];
 int lastButton = -1;
+u8 currTerm[0x20];
 
 void buttonPressed(int);
-void doCalculation(char*, char*);
 
 int main(void) {
 	#ifdef console
@@ -62,8 +63,18 @@ int main(void) {
 	int xTabPos = 4;
 	xTabPos += gui_tab_button("Menu", 4);
 	xTabPos += gui_tab_button("Graph", xTabPos + 2);
+
+	#ifndef console
+	// init ADC
+	ADMUX = (0x01 << REFS0) /* AVCC with external capacitor at AREF pin */
+			| (0 << ADLAR) /* Left Adjust Result: disabled */
+			| (0b11110 << MUX0) /* 1.1V (Vbg) */;
+	ADCSRA |= _BV(ADEN); // enable ADC
+	ADCSRA |= (0b100 << ADPS0); // prescaler 16
+	#endif
 	
 	while (1) {
+		buttons_get_special();
 		int btnUnmapped = buttons_getPressed();
 		int currButton = -1;
 		if (btnUnmapped > -1) {
@@ -77,71 +88,45 @@ int main(void) {
 		} else {
 			lastButton = -1;
 		}
+		#ifndef console
+		// calculate VCC
+		long adc = 0;
+		ADCSRA |= _BV(ADSC); // start ADC conversion
+		while (ADCSRA & _BV(ADIF)); // wait for conversion to complete
+		adc = (ADCL | (ADCH << 8));
+		double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917;
+		char vccBuf[16];
+		sprintf(vccBuf, "Vcc %ld    %.3fV", adc, vcc);
+		gui_draw_string(vccBuf, 0, 32, FNT_SM, 0);
+		#endif
 		_delay_ms(20);
 	}
 }
 
 void buttonPressed(int buttonID) {
-	if (currLine[cursorX] == -1) {
-		for (int i = 0; i < 0x80; i++) currLine[i] = 0;
+	if (currTerm[cursorX] == CHAR_END) {
+		for (int i = 0; i < 0x80; i++) currTerm[i] = 0;
 		cursorX = 0;
 		disp_clear();
 	}
 	if (buttonID < 10) {
-		currLine[cursorX] = buttonID;
-		gui_draw_char(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
+		currTerm[cursorX] = buttonID;
+		gui_draw_char(cursorX * 8, 0, buttonID, FNT_MD, 1);
 		cursorX++;
 	} else {
 		if (buttonID < 14) {
-			currLine[cursorX] = 62 - 10 + buttonID;
-			gui_draw_char(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
+			currTerm[cursorX] = (buttonID - 10) | (OPTYPE_SIMPLE << 5);
+			gui_draw_char(cursorX * 8, 0, 62 - 10 + buttonID, FNT_MD, 1);
 			cursorX++;
 		}
-		if (buttonID == 14) {
-			currLine[cursorX] = -1;
-			doCalculation(currLine, resBuf);
-			gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
-		}
+	}
+	if (buttonID == 14) {
+		currTerm[cursorX] = CHAR_END;
+		opNode* termTree = parse_term(currTerm);
+		double res = evaluate_term(termTree);
+		term_free(termTree);
+		char resBuf[16];
+		sprintf(resBuf, "%.3f", res);
+		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 	}
 }
-
-long extrNum(char *input, int* pos) {
-	long bufNum = 0;
-	while (input[*pos] > -1 && input[*pos] < 10) {
-		bufNum = (bufNum * 10) + input[*pos];
-		(*pos)++;
-	}
-	return bufNum;
-}
-
-void doCalculation(char* input, char* output) {
-	int i = 0;
-	double result = 0;
-	int isFirstNum = 1;
-	while (input[i] > -1) {
-		if (isFirstNum == 1) {
-			result = extrNum(input, &i);
-			isFirstNum = 0;
-		} else {
-			char operand = input[i];
-			i++;
-			long num2 = extrNum(input, &i);
-			switch (operand) {
-				case 62:
-				result += num2;
-				break;
-				case 63:
-				result -= num2;
-				break;
-				case 64:
-				result /= num2;
-				break;
-				case 65:
-				result *= num2;
-				break;
-			}
-		}
-	}
-	sprintf(resBuf, "%f", result);
-}
-

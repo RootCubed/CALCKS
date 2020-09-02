@@ -4,7 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-u8 input[] = {NUM_8, OP_MULT, NUM_2, NUM_8, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_MINUS, NUM_3, OP_MULT, NUM_2, OP_PLUS, NUM_3, NUM_8, NUM_8, CHAR_END};
+const u8 PRECEDENCE[] = {
+    0, 0, // plus, minus
+    1, 1, // mult, div
+};
+
+//u8 input[] = {NUM_8, OP_MULT, NUM_2, NUM_8, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_MINUS, NUM_3, OP_MULT, NUM_2, OP_PLUS, NUM_3, NUM_8, NUM_8, CHAR_END};
 
 opNode* node_stack_pop(opStack* stack) {
     opStackNode* top = stack->top;
@@ -255,6 +260,7 @@ void print_char_console(u8 input) {
     }
 }
 
+/*
 int main(int argc, char** argv) {
     int i = 0;
     while (input[i] != CHAR_END) {
@@ -266,3 +272,4 @@ int main(int argc, char** argv) {
     printf("res = %f\n", evaluate_term(term));
     term_free(term);
 }
+*/

@@ -33,11 +33,6 @@
 #define OPTYPE_MIDDLE 3
 #define OPTYPE_END    4
 
-const u8 PRECEDENCE[] = {
-    0, 0, // plus, minus
-    1, 1, // mult, div
-};
-
 typedef struct opNode opNode;
 
 struct opNode {
