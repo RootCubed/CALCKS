@@ -50,7 +50,7 @@ int buttons_getPressed() {
 	for (int i = 0; i < BUTTONS_NUM_COLUMNS; i++) {
 		char pressed = PIND & (BUTTONS_ROW_0 | BUTTONS_ROW_1 | BUTTONS_ROW_2 | BUTTONS_ROW_3 | BUTTONS_ROW_4);
 		sprintf(buf, "%02x", pressed);
-		gui_drawString(buf, 50, 8 * i, 0, 0);
+		gui_draw_string(buf, 50, 8 * i, 0, 0);
 		if (PIND & pressed) {
 			int row = 0;
 			while (((pressed >> row) & 1) == 0 && row < 5) row++;
@@ -60,6 +60,6 @@ int buttons_getPressed() {
 		BUTTONS_SR_PULSE();
 	}
 	sprintf(buf, "%02d", res);
-	gui_drawString(buf, 100, 60, 0, 0);
+	gui_draw_string(buf, 100, 60, 0, 0);
 	return res;
 }

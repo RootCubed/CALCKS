@@ -17,7 +17,7 @@ void gui_draw_byte(char bt, int x, int y) {
     disp_data(bt);
 }
 
-void gui_drawChar(int xPos, int yPos, int num, int font, int isInverted) {
+void gui_draw_char(int xPos, int yPos, int num, int font, int isInverted) {
     xPos += 4;
 	int fontWidth = fonts[font][2];
 	int fontByteWidth = 1;
@@ -105,9 +105,9 @@ void gui_draw_image() {
     }
 }
 
-int gui_tabButton(const char *tabName, int xPos) {
-    gui_drawByte(0b11111110, xPos + 4, 56);
-    int length = gui_drawString(tabName, xPos + 1, 57, FNT_SM, 1);
-    gui_drawByte(0b11111110, xPos + 4 + 1 + length, 56);
+int gui_tab_button(const char *tabName, int xPos) {
+    gui_draw_byte(0b11111110, xPos + 4, 56);
+    int length = gui_draw_string(tabName, xPos + 1, 57, FNT_SM, 1);
+    gui_draw_byte(0b11111110, xPos + 4 + 1 + length, 56);
     return length + 2;
 }

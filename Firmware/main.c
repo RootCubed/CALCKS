@@ -21,7 +21,7 @@
 			if (code == 'b') {
 				char button;
 				scanf("%d", &button);
-				setButton(button);
+				set_button(button);
 			}
 		}
 		return 0;
@@ -54,7 +54,7 @@ int main(void) {
 	_delay_ms(2000);
 	
 	for (int i = 0; i < 70; i++) {
-		gui_drawChar((i * 8) % 128, i / 16 * 16, i, FNT_SM, 0);
+		gui_draw_char((i * 8) % 128, i / 16 * 16, i, FNT_SM, 0);
 	}
 	
 	disp_clear();
