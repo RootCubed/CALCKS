@@ -49,7 +49,7 @@ int main(void) {
 	
 	disp_clear();
 
-	gui_drawImage();
+	gui_draw_image();
 	
 	_delay_ms(2000);
 	
@@ -60,12 +60,8 @@ int main(void) {
 	disp_clear();
 	buttons_initialize();
 	int xTabPos = 4;
-	xTabPos += gui_tabButton("Menu", 4);
-	xTabPos += gui_tabButton("Graph", xTabPos + 2);
-
-	int count = 0;
-	char countStrBuf[16];
-
+	xTabPos += gui_tab_button("Menu", 4);
+	xTabPos += gui_tab_button("Graph", xTabPos + 2);
 	
 	while (1) {
 		int btnUnmapped = buttons_getPressed();
@@ -93,18 +89,18 @@ void buttonPressed(int buttonID) {
 	}
 	if (buttonID < 10) {
 		currLine[cursorX] = buttonID;
-		gui_drawChar(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
+		gui_draw_char(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
 		cursorX++;
 	} else {
 		if (buttonID < 14) {
 			currLine[cursorX] = 62 - 10 + buttonID;
-			gui_drawChar(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
+			gui_draw_char(cursorX * 8, 0, currLine[cursorX], FNT_MD, 1);
 			cursorX++;
 		}
 		if (buttonID == 14) {
 			currLine[cursorX] = -1;
 			doCalculation(currLine, resBuf);
-			gui_drawString(resBuf, 0, 16, FNT_MD, 0);
+			gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 		}
 	}
 }

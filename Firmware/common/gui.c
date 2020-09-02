@@ -10,7 +10,7 @@ const int fonts[2][4] = {
 	{ EEPROM_FONT_8x16, EEPROM_FONT_8x16_LEN, 8, 16 }
 };
 
-void gui_drawByte(char bt, int x, int y) {
+void gui_draw_byte(char bt, int x, int y) {
     disp_setPage(y / 8);
     disp_setMSBCol((x >> 4 & 0xF));
     disp_setLSBCol((x      & 0xF));
@@ -46,7 +46,7 @@ void gui_drawChar(int xPos, int yPos, int num, int font, int isInverted) {
 
 char realStringBuf[64];
 
-void convertString(const char *str, char *buf) {
+void convert_string(const char *str, char *buf) {
     buf = buf + 1; // start one later
     int i = 0;
     while (str[i] != 0) {
@@ -74,20 +74,20 @@ void convertString(const char *str, char *buf) {
     *(buf - 1) = i + 1;
 }
 
-int gui_drawString(const char *str, int xPos, int yPos, int font, int isInverted) {
-    convertString(str, realStringBuf);
+int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverted) {
+    convert_string(str, realStringBuf);
     int len = realStringBuf[0];
     int i = 1;
     while (i < len) {
         if (realStringBuf[i] != -1) {
-            gui_drawChar(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
+            gui_draw_char(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
         }
         i++;
     }
     return (i - 1) * fonts[font][2];
 }
 
-void gui_drawImage() {
+void gui_draw_image() {
 	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, EEPROM_STARTUP_LEN);
     for (int page = 7; page >= 0; page--) {
         disp_setPage(page);
