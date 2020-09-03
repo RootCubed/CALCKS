@@ -30,6 +30,8 @@
 #else
 	#include <avr/io.h>
 	#include <util/delay.h>
+	#include <avr/sleep.h>
+	#include <avr/interrupt.h>
 #endif
 
 int cursorX = 0, cursorY = 0;
@@ -96,7 +98,7 @@ int main(void) {
 		adc = (ADCL | (ADCH << 8));
 		double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917;
 		char vccBuf[16];
-		sprintf(vccBuf, "Vcc %ld    %.3fV", adc, vcc);
+		sprintf(vccBuf, "Vcc %ld-%.3fV", adc, vcc);
 		gui_draw_string(vccBuf, 0, 32, FNT_SM, 0);
 		#endif
 		_delay_ms(20);
@@ -129,4 +131,29 @@ void buttonPressed(int buttonID) {
 		sprintf(resBuf, "%.3f", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 	}
+	if (buttonID == 15) {
+		// put display into sleep mode (turn display off, turn all points on)
+		disp_command(DISP_CMD_ONOFF     | 0);
+		disp_command(DISP_CMD_ALL_ONOFF | 1);
+
+		// enable pin change interrupt for PC2 / PCINT18
+		PCICR = 0b0100;
+		PCMSK2 = 0b00000100; // PCINT8
+
+		sei();
+		
+		set_sleep_mode(0b101);
+		sleep_enable();
+		sleep_cpu();
+
+		//after wake up, disable SE and disable interrupts
+		sleep_disable();
+		cli();
+
+		// turn display back on
+		disp_command(DISP_CMD_ONOFF     | 1);
+		disp_command(DISP_CMD_ALL_ONOFF | 0);
+	}
 }
+
+ISR(PCINT2_vect) {}
