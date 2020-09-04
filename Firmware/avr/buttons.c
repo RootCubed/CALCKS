@@ -39,8 +39,12 @@ char buttons_get_special() {
 	sprintf(buf, "%02x%02x", PINC, DDRC);
 	gui_draw_string(buf, 100, 60, 0, 0);
 	
-	sprintf(buf, "%02x", PINB);
-	gui_draw_string(buf, 100, 40, 0, 0);
+	if ((PINB & 1) == 0) { // charge controller PROG
+		sprintf(buf, "Charging.....", PINB);
+	} else {
+		sprintf(buf, "Not Charging.", PINB);
+	}
+	gui_draw_string(buf, 128 - 13 * 6, 40, 0, 0);
 	return res;
 }
 

@@ -32,6 +32,7 @@
 	#include <util/delay.h>
 	#include <avr/sleep.h>
 	#include <avr/interrupt.h>
+	//#include "avr/bmp3.h"
 #endif
 
 int cursorX = 0, cursorY = 0;
@@ -39,6 +40,9 @@ char currLine[0x20] = "";
 char resBuf[0x20];
 int lastButton = -1;
 u8 currTerm[0x20];
+
+// bmp388
+//struct bmp3_dev* bmp;
 
 void buttonPressed(int);
 
@@ -73,6 +77,14 @@ int main(void) {
 			| (0b11110 << MUX0) /* 1.1V (Vbg) */;
 	ADCSRA |= _BV(ADEN); // enable ADC
 	ADCSRA |= (0b100 << ADPS0); // prescaler 16
+
+	// BMP388
+	/*bmp->intf = BMP3_I2C_INTF;
+	int8_t bmp3result = bmp3_init(bmp);
+	if (bmp3result >= 0) { // no error
+		bmp3_soft_reset(bmp);
+		bmp3_set_sensor_settings(BMP3_SEL_PRESS_EN | BMP3_SEL_TEMP_EN, bmp);
+	}*/
 	#endif
 	
 	while (1) {
@@ -96,17 +108,25 @@ int main(void) {
 		ADCSRA |= _BV(ADSC); // start ADC conversion
 		while (ADCSRA & _BV(ADIF)); // wait for conversion to complete
 		adc = (ADCL | (ADCH << 8));
-		double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917;
-		char vccBuf[16];
-		sprintf(vccBuf, "Vcc %ld-%.3fV", adc, vcc);
-		gui_draw_string(vccBuf, 0, 32, FNT_SM, 0);
+		double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917; // more or less accurate
+		char strBuf[16];
+		sprintf(strBuf, "%.2fV", vcc);
+		gui_draw_string(strBuf, 128 - 5 * 6, 0, FNT_SM, 0);
+
+		// bmp388
+		/*if (bmp3result >= 0) {
+			struct bmp3_data sensorData;
+			bmp3_get_sensor_data(BMP3_ALL, &sensorData, bmp);
+			sprintf(strBuf, "%.2f °C", sensorData.temperature);
+			gui_draw_string(strBuf, 0, 40, FNT_SM, 0);
+		}*/
 		#endif
 		_delay_ms(20);
 	}
 }
 
 void buttonPressed(int buttonID) {
-	if (currTerm[cursorX] == CHAR_END) {
+	if (buttonID != 15 && currTerm[cursorX] == CHAR_END) {
 		for (int i = 0; i < 0x80; i++) currTerm[i] = 0;
 		cursorX = 0;
 		disp_clear();

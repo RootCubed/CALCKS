@@ -11,6 +11,7 @@ const int fonts[2][4] = {
 };
 
 void gui_draw_byte(char bt, int x, int y) {
+    x += 4;
     disp_setPage(y / 8);
     disp_setMSBCol((x >> 4 & 0xF));
     disp_setLSBCol((x      & 0xF));
@@ -81,6 +82,10 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
     while (i < len) {
         if (realStringBuf[i] != -1) {
             gui_draw_char(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
+        } else {
+            for (int j = 0; j < fonts[font][2]; j++) {
+                gui_draw_byte(0, xPos + (i - 1) * fonts[font][2] + j, yPos);
+            }
         }
         i++;
     }
@@ -106,8 +111,8 @@ void gui_draw_image() {
 }
 
 int gui_tab_button(const char *tabName, int xPos) {
-    gui_draw_byte(0b11111110, xPos + 4, 56);
+    gui_draw_byte(0b11111110, xPos, 56);
     int length = gui_draw_string(tabName, xPos + 1, 57, FNT_SM, 1);
-    gui_draw_byte(0b11111110, xPos + 4 + 1 + length, 56);
+    gui_draw_byte(0b11111110, xPos + 1 + length, 56);
     return length + 2;
 }
