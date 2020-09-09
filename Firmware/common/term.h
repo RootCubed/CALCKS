@@ -25,6 +25,10 @@
 #define OP_MULT  0b00100010
 #define OP_DIV   0b00100011
 
+#define VAR_X 0b10100000
+#define VAR_Y 0b10100001
+#define VAR_Z 0b10100010
+
 #define CHAR_END 0xFF
 
 #define OPTYPE_CONST  0
@@ -32,17 +36,25 @@
 #define OPTYPE_BEGIN  2
 #define OPTYPE_MIDDLE 3
 #define OPTYPE_END    4
+#define OPTYPE_VAR    5
+
+#define OPNODE_OP    0
+#define OPNODE_CONST 1
+#define OPNODE_VAR   2
 
 typedef struct opNode opNode;
 
 struct opNode {
     u8 operation;
     opNode* parent;
-    u8 usedOperands; // 2 bits; 0 = op1/2, 1 = val1/2
+    u8 op1Type; // 0: op, 1: const, 2: var
+    u8 op2Type; // 0: op, 1: const, 2: var
     opNode* op1;
     opNode* op2;
     u64 val1;
     u64 val2;
+    u8 varField1;
+    u8 varField2;
 };
 
 typedef struct opStackNode opStackNode;
@@ -70,7 +82,7 @@ int node_stack_length(opStack*);
 
 void term_free(opNode*);
 opNode* parse_term(u8*);
-double evaluate_term(opNode*);
+double evaluate_term(opNode*, double);
 symbolField getFields(u8);
 
 #endif /* TERM_H_ */

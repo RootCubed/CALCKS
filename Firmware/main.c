@@ -5,6 +5,8 @@
 #include "common/eep.h"
 #include "common/gui.h"
 #include "common/term.h"
+#include "common/mandel.h"
+#include "common/graph.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -32,17 +34,22 @@
 	#include <util/delay.h>
 	#include <avr/sleep.h>
 	#include <avr/interrupt.h>
-	//#include "avr/bmp3.h"
 #endif
+
+enum modes {
+	m_calc = 0,
+	m_mandelbrot = 1,
+	m_graph = 2
+};
 
 int cursorX = 0, cursorY = 0;
 char currLine[0x20] = "";
 char resBuf[0x20];
 int lastButton = -1;
 u8 currTerm[0x20];
+opNode* termTree;
 
-// bmp388
-//struct bmp3_dev* bmp;
+int currMode = m_calc;
 
 void buttonPressed(int);
 
@@ -54,21 +61,19 @@ int main(void) {
 	disp_initialize();
 	eep_initialize();
 	
-	disp_clear();
-
 	gui_draw_image();
+
+	#ifndef console
+	char strBuf[16];
+	sprintf(strBuf, "%02x", MCUSR);
+	gui_draw_string(strBuf, 128 - 3 * 6, 64 - 6, FNT_SM, 0);
+	MCUSR = 0;
+	#endif
 	
 	_delay_ms(2000);
 	
-	for (int i = 0; i < 70; i++) {
-		gui_draw_char((i * 8) % 128, i / 16 * 16, i, FNT_SM, 0);
-	}
-	
 	disp_clear();
 	buttons_initialize();
-	int xTabPos = 4;
-	xTabPos += gui_tab_button("Menu", 4);
-	xTabPos += gui_tab_button("Graph", xTabPos + 2);
 
 	#ifndef console
 	// init ADC
@@ -78,16 +83,10 @@ int main(void) {
 	ADCSRA |= _BV(ADEN); // enable ADC
 	ADCSRA |= (0b100 << ADPS0); // prescaler 16
 
-	// BMP388
-	/*bmp->intf = BMP3_I2C_INTF;
-	int8_t bmp3result = bmp3_init(bmp);
-	if (bmp3result >= 0) { // no error
-		bmp3_soft_reset(bmp);
-		bmp3_set_sensor_settings(BMP3_SEL_PRESS_EN | BMP3_SEL_TEMP_EN, bmp);
-	}*/
 	#endif
 	
 	while (1) {
+		//disp_clear();
 		buttons_get_special();
 		int btnUnmapped = buttons_getPressed();
 		int currButton = -1;
@@ -102,25 +101,52 @@ int main(void) {
 		} else {
 			lastButton = -1;
 		}
-		#ifndef console
-		// calculate VCC
-		long adc = 0;
-		ADCSRA |= _BV(ADSC); // start ADC conversion
-		while (ADCSRA & _BV(ADIF)); // wait for conversion to complete
-		adc = (ADCL | (ADCH << 8));
-		double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917; // more or less accurate
-		char strBuf[16];
-		sprintf(strBuf, "%.2fV", vcc);
-		gui_draw_string(strBuf, 128 - 5 * 6, 0, FNT_SM, 0);
 
-		// bmp388
-		/*if (bmp3result >= 0) {
-			struct bmp3_data sensorData;
-			bmp3_get_sensor_data(BMP3_ALL, &sensorData, bmp);
-			sprintf(strBuf, "%.2f °C", sensorData.temperature);
-			gui_draw_string(strBuf, 0, 40, FNT_SM, 0);
-		}*/
-		#endif
+		long adc = 0;
+		char strBuf[16];
+
+		switch (currMode) {
+			case m_calc:
+				gui_tab_button("Menu", 0);
+				gui_tab_button("Graph", 28);
+				gui_tab_button("Mandel", 62);
+
+				#ifndef console
+				// calculate VCC
+				ADCSRA |= _BV(ADSC); // start ADC conversion
+				while (ADCSRA & _BV(ADIF)); // wait for conversion to complete
+				adc = (ADCL | (ADCH << 8));
+				double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917; // more or less accurate
+			
+				if ((PINB & 1) == 0) { // charge controller PROG
+					sprintf(strBuf, "Charging.....", PINB);
+				} else {
+					sprintf(strBuf, "Not Charging.", PINB);
+				}
+				gui_draw_string(strBuf, 128 - 13 * 6, 49, 0, 0);
+
+				sprintf(strBuf, "%.2fV", vcc);
+				gui_draw_string(strBuf, 128 - 5 * 6, 10, FNT_SM, 0);
+				double percentage = (vcc - 3.2) / (4.2 - 3.2);
+				
+				gui_draw_rect(104, 0, 22, 6, 0);
+				gui_draw_line(127, 2, 127, 4);
+				for (int i = 0; i < (int) (percentage * 22); i++) {
+					gui_draw_line(104 + i, 0, 104 + i, 6);
+				}
+				gui_clear_rect(104 + (int) (percentage * 22), 1, 22 - ((int) (percentage * 22)), 4);
+				#endif
+				break;
+			case m_mandelbrot:
+				mandel_draw();
+				break;
+			case m_graph:
+				termTree = parse_term(currTerm);
+				graph_draw(termTree);
+				term_free(termTree);
+				break;
+		}
+
 		_delay_ms(20);
 	}
 }
@@ -144,8 +170,8 @@ void buttonPressed(int buttonID) {
 	}
 	if (buttonID == 14) {
 		currTerm[cursorX] = CHAR_END;
-		opNode* termTree = parse_term(currTerm);
-		double res = evaluate_term(termTree);
+		termTree = parse_term(currTerm);
+		double res = evaluate_term(termTree, 0);
 		term_free(termTree);
 		char resBuf[16];
 		sprintf(resBuf, "%.3f", res);
@@ -153,15 +179,16 @@ void buttonPressed(int buttonID) {
 	}
 	if (buttonID == 15) {
 		// put display into sleep mode (turn display off, turn all points on)
+
+		#ifndef console
 		disp_command(DISP_CMD_ONOFF     | 0);
 		disp_command(DISP_CMD_ALL_ONOFF | 1);
 
 		// enable pin change interrupt for PC2 / PCINT18
 		PCICR = 0b0100;
 		PCMSK2 = 0b00000100; // PCINT8
-
-		sei();
 		
+		sei();
 		set_sleep_mode(0b101);
 		sleep_enable();
 		sleep_cpu();
@@ -173,7 +200,28 @@ void buttonPressed(int buttonID) {
 		// turn display back on
 		disp_command(DISP_CMD_ONOFF     | 1);
 		disp_command(DISP_CMD_ALL_ONOFF | 0);
+		#endif
+	}
+	if (buttonID == 16) {
+		currMode = m_mandelbrot;
+	}
+	if (buttonID == 17) {
+		mandel_reset_state();
+		graph_reset_state();
+		currMode = m_calc;
+		disp_clear();
+	}
+	if (buttonID == 18) {
+		currMode = m_graph;
+		currTerm[cursorX] = CHAR_END;
+	}
+	if (buttonID == 19) {
+		currTerm[cursorX] = VAR_X;
+		gui_draw_char(cursorX * 8, 0, 59, FNT_MD, 1);
+		cursorX++;
 	}
 }
 
+#ifndef console
 ISR(PCINT2_vect) {}
+#endif

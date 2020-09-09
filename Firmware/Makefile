@@ -5,7 +5,7 @@ SHELL=cmd
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
 common-files = common/*.h
-common-obj = common/gui.o common/term.o
+common-obj = common/gui.o common/term.o common/mandel.o common/graph.o
 console-files = console/buttons.o console/display.o console/eep.o
 
 default: eeprom upload clean
