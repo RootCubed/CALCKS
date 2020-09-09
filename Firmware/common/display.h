@@ -39,6 +39,8 @@ void disp_clear();
 
 void disp_command(char);
 void disp_data(char);
+void disp_update_data(char);
+void disp_remove_data(char);
 
 #define disp_setPage(page) disp_command(DISP_CMD_PAGE | page);
 #define disp_setMSBCol(val) disp_command(DISP_CMD_COL_MSB | val);

@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "eep.h"
 #include "display.h"
+#include <math.h>
 
 unsigned char disp_eeprom_buf[1024];
 
@@ -11,11 +12,57 @@ const int fonts[2][4] = {
 };
 
 void gui_draw_byte(char bt, int x, int y) {
+    if (x < 0 || x > 128 || y < 0 || y > 64) return;
     x += 4;
+
+    int offset = y % 8;
+
     disp_setPage(y / 8);
     disp_setMSBCol((x >> 4 & 0xF));
     disp_setLSBCol((x      & 0xF));
-    disp_data(bt);
+    disp_data((bt << offset) & 0xFF);
+    if (offset != 0) {
+        disp_setPage(y / 8 + 1);
+        disp_setMSBCol((x >> 4 & 0xF));
+        disp_setLSBCol((x      & 0xF));
+        disp_data(((short) bt & 0x00FF) >> (8 - offset));
+    }
+}
+
+void gui_update_byte(char bt, int x, int y) {
+    if (x < 0 || x > 128 || y < 0 || y > 64) return;
+    x += 4;
+
+    int offset = y % 8;
+
+    disp_setPage(y / 8);
+    disp_setMSBCol((x >> 4 & 0xF));
+    disp_setLSBCol((x      & 0xF));
+    disp_update_data((bt << offset) & 0xFF);
+    if (y % 8 != 0) {
+        disp_setPage(y / 8 + 1);
+        disp_setMSBCol((x >> 4 & 0xF));
+        disp_setLSBCol((x      & 0xF));
+        disp_update_data(((short) bt & 0x00FF) >> (8 - offset));
+    }
+}
+
+void gui_remove_byte(char bt, int x, int y) {
+    if (x < 0 || x > 128 || y < 0 || y > 64) return;
+    x += 4;
+
+    int offset = y % 8;
+
+    disp_setPage(y / 8);
+    disp_setMSBCol((x >> 4 & 0xF));
+    disp_setLSBCol((x      & 0xF));
+    disp_remove_data((bt << offset) & 0xFF | ~((0xFF << offset) & 0xFF));
+    if (y % 8 != 0) {
+        disp_setPage(y / 8 + 1);
+        disp_setMSBCol((x >> 4 & 0xF));
+        disp_setLSBCol((x      & 0xF));
+        disp_remove_data(((0xFF00 | bt) >> (8 - offset)) & 0xFF);
+    }
 }
 
 void gui_draw_char(int xPos, int yPos, int num, int font, int isInverted) {
@@ -83,9 +130,7 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
         if (realStringBuf[i] != -1) {
             gui_draw_char(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
         } else {
-            for (int j = 0; j < fonts[font][2]; j++) {
-                gui_draw_byte(0, xPos + (i - 1) * fonts[font][2] + j, yPos);
-            }
+            gui_clear_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3] - 1);
         }
         i++;
     }
@@ -107,6 +152,61 @@ void gui_draw_image() {
             }
             disp_data(column);
         }
+    }
+}
+
+void gui_set_pixel(int x, int y, int value) {
+    value = value ? 1 : 0;
+    gui_update_byte(value, x, y);
+}
+
+void gui_draw_line(int x1, int y1, int x2, int y2) {
+    if (x1 > x2) {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+    }
+    if (y1 > y2) {
+        int tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+    int diffX = x2 - x1;
+    int diffY = y2 - y1;
+    if (diffX == 0) {
+        for (int i = y1; i <= y2; i++) gui_update_byte(0x01, x1, i); // TODO: optimize vertical lines
+        return;
+    }
+    double q = (double) diffY / diffX;
+    for (int cX = x1; cX <= x2; cX++) {
+        gui_update_byte(0x01, cX, y1 + ceil(q * (cX - x1)));
+    }
+}
+
+void gui_draw_rect(int x, int y, int width, int height, int isFilled) {
+    if (width < 0 || height < 0 || x < 0 || y < 0) return;
+    gui_draw_line(x, y, x, y + height);
+    gui_draw_line(x, y, x + width, y);
+    gui_draw_line(x, y + height, x + width, y + height);
+    gui_draw_line(x + width, y, x + width, y + height);
+    if (isFilled) {
+        for (int cX = x; cX < x + width; cX++) {
+            gui_draw_line(cX, y, cX, y + height);
+        }
+    }
+}
+
+void gui_draw_circle(int x, int y, int dia, int isFilled) {
+    if (dia < 0 || x < 0 || y < 0) return;
+    for (int i = 0; i < 360; i++) {
+        double rads = i * 3.1415926/180;
+        gui_update_byte(0x01, round(dia * sin(rads)) + x, round(dia * cos(rads) * 0.85714) + y);
+    }
+}
+
+void gui_clear_rect(int x, int y, int width, int height) {
+    for (int cX = x; cX < x + width; cX++) {
+        for (int i = y; i <= y + height; i++) gui_remove_byte(0xFE, cX, i); // TODO: optimize vertical lines
     }
 }
 
