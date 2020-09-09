@@ -123,7 +123,7 @@ opNode* parse_term(u8* input) {
     u8 numIsVar = 0;
     opStack stack = {NULL};
     u8 pos = 0;
-    opNode* currOp;
+    opNode* currOp = NULL;
     while (input[pos] != CHAR_END) {
         symbolField f = getFields(input[pos]);
         switch (f.type) {
@@ -209,6 +209,20 @@ opNode* parse_term(u8* input) {
                 currNum = 0;
         }
         pos++;
+    }
+    if (currOp == NULL) {
+        currOp = (opNode *) malloc(sizeof(opNode));
+        currOp->operation = 0; // plus
+        if (numIsVar) {
+            currOp->op1Type = OPNODE_VAR;
+            currOp->val1 = currVar;
+        } else {
+            currOp->op1Type = OPNODE_CONST;
+            currOp->val1 = currNum;
+        }
+        currOp->op2Type = OPNODE_CONST;
+        currOp->val2 = 0;
+        return currOp;
     }
     if (numIsVar) {
         currOp->val2 = currVar;
