@@ -21,7 +21,7 @@
 #define BUTTONS_SR_PULSE() PORTB &= ~BUTTONS_SR_CLK;PORTB |= BUTTONS_SR_CLK
 
 
-extern const char BUTTON_MAP[25];
+extern const char BUTTON_MAP[35];
 
 
 void buttons_initialize();
