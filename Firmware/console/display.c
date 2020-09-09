@@ -19,8 +19,20 @@ void disp_clear() {
 }
 
 void disp_data(char cmd) {
-	if (xPos > 128 || page > 7) return;
-    buffer[page * 128 + xPos] = cmd;
+	if (xPos > 132 || page > 7) return;
+    buffer[page * 128 + xPos - 4] = cmd;
+	xPos++;
+}
+
+void disp_update_data(char cmd) {
+    if (xPos > 132 || page > 7) return;
+    buffer[page * 128 + xPos - 4] |= cmd;
+	xPos++;
+}
+
+void disp_remove_data(char cmd) {
+    if (xPos > 132 || page > 7) return;
+    buffer[page * 128 + xPos - 4] &= cmd;
 	xPos++;
 }
 
