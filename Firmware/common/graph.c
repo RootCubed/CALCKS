@@ -22,11 +22,13 @@ void graph_draw(opNode* term) {
         double transf0y = map(0, rangeY1, rangeY2, 0, 64);
         gui_draw_line(0, transf0y, 128, transf0y);
         gui_draw_line(transf0x, 0, transf0x, 64);
+        double prevRes = 0;
         for (double x = 0; x < 128; x += 0.1) {
             double tfX = map(x, 0, 128, rangeX1, rangeX2);
             double funcRes = evaluate_term(term, tfX);
             int transfY = map(funcRes, rangeY1, rangeY2, 0, 64);
             if (transfY >= 0 && transfY <= 64) gui_set_pixel(x, transfY, 1);
+            prevRes = funcRes;
         }
         graph_hasDrawn = 1;
     }

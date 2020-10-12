@@ -19,19 +19,19 @@ void disp_clear() {
 }
 
 void disp_data(char cmd) {
-	if (xPos > 132 || page > 7) return;
+	if (xPos < 4 || xPos > 132 || page < 0 || page > 7) return;
     buffer[page * 128 + xPos - 4] = cmd;
 	xPos++;
 }
 
 void disp_update_data(char cmd) {
-    if (xPos > 132 || page > 7) return;
+    if (xPos < 4 || xPos > 132 || page < 0 || page > 7) return;
     buffer[page * 128 + xPos - 4] |= cmd;
 	xPos++;
 }
 
 void disp_remove_data(char cmd) {
-    if (xPos > 132 || page > 7) return;
+    if (xPos < 4 || xPos > 132 || page < 0 || page > 7) return;
     buffer[page * 128 + xPos - 4] &= cmd;
 	xPos++;
 }
@@ -52,4 +52,10 @@ void disp_command(char cmd) {
 
 void disp_print() {
 	fwrite(buffer, 1, 128 * 8, stdout);
+	/*char hex[2];
+	for (int i = 0; i < 128 * 8; i++) {
+		sprintf(hex, "%c", buffer[i]);
+		fputs(hex, stdout);
+	}*/
+	printf("\n");
 }
