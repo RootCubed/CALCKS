@@ -25,6 +25,9 @@
 #define OP_MULT  0b00100010
 #define OP_DIV   0b00100011
 
+#define OP_BRACK_OPEN  0b01000100
+#define OP_BRACK_CLOSE 0b10000100
+
 #define VAR_X 0b10100000
 #define VAR_Y 0b10100001
 #define VAR_Z 0b10100010
@@ -41,6 +44,11 @@
 #define OPNODE_OP    0
 #define OPNODE_CONST 1
 #define OPNODE_VAR   2
+
+#define VALTYPE_UNDEF  0
+#define VALTYPE_NUMBER 1
+#define VALTYPE_VAR    2
+#define VALTYPE_OP     3
 
 typedef struct opNode opNode;
 

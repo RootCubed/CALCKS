@@ -5,20 +5,21 @@
 #include <string.h>
 
 const u8 PRECEDENCE[] = {
-    0, 0, // plus, minus
-    1, 1, // mult, div
+    1, 1, // plus, minus
+    2, 2, // mult, div
+    0,    // brackets
 };
 
-//u8 input[] = {VAR_X, OP_MULT, NUM_2, NUM_8, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_MINUS, NUM_3, OP_MULT, NUM_2, OP_PLUS, NUM_3, NUM_8, NUM_8, CHAR_END};
+//u8 input[] = {OP_BRACK_OPEN, NUM_4, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_BRACK_CLOSE, OP_MULT, NUM_2, CHAR_END};
 
 opNode* node_stack_pop(opStack* stack) {
     opStackNode* top = stack->top;
     opNode* opPtr = top->ptr;
-    opStackNode* second = top->next;
+    opStackNode* second = top->prev;
     free(top);
     stack->top = second;
     if (second != NULL) {
-        second->prev = NULL;
+        second->next = NULL;
     }
     return opPtr;
 }
@@ -26,15 +27,11 @@ opNode* node_stack_pop(opStack* stack) {
 void node_stack_remove(opStack* stack, opStackNode* node) {
     if (node->next != NULL) {
         node->next->prev = node->prev;
+    } else {
+        stack->top = node->prev;
     }
     if (node->prev != NULL) {
         node->prev->next = node->next;
-    } else {
-        if (node->next != NULL) {
-            stack->top = node->next;
-        } else {
-            stack->top = NULL;
-        }
     }
     free(node);
 }
@@ -44,15 +41,14 @@ void node_stack_push(opStack* stack, opNode* toInsert) {
     memset(newNode, 0, sizeof(opStackNode));
     newNode->ptr = toInsert;
     if (stack->top != NULL) {
-        newNode->next = stack->top;
+        newNode->prev = stack->top;
     } else {
-        newNode->next = NULL;
+        newNode->prev = NULL;
     }
-    newNode->prev = NULL;
+    newNode->next = NULL;
 
-    opStackNode* top = stack->top;
-    if (top != NULL) {
-        top->prev = newNode;
+    if (stack->top != NULL) {
+        stack->top->next = newNode;
     }
     stack->top = newNode;
 }
@@ -66,7 +62,7 @@ int node_stack_length(opStack* stack) {
     opStackNode* current = stack->top;
     while (current != NULL) {
         counter++;
-        current = current->next;
+        current = current->prev;
     }
     return counter;
 }
@@ -120,7 +116,8 @@ void term_free(opNode* node) {
 opNode* parse_term(u8* input) {
     u64 currNum = 0;
     u8 currVar = 0;
-    u8 numIsVar = 0;
+    u8 currValType = VALTYPE_NUMBER;
+    opNode* currValOp;
     opStack stack = {NULL};
     u8 pos = 0;
     opNode* currOp = NULL;
@@ -128,7 +125,7 @@ opNode* parse_term(u8* input) {
         symbolField f = getFields(input[pos]);
         switch (f.type) {
             case OPTYPE_CONST:
-                numIsVar = 0;
+                currValType = VALTYPE_NUMBER;
                 currNum *= 10;
                 currNum += f.value;
                 break;
@@ -138,29 +135,33 @@ opNode* parse_term(u8* input) {
                 currOp->operation = f.value;
 
                 // set val1/varField1 in case of non-empty stack, or if the current operator has higher precedence than the previous one
-                if (numIsVar) {
-                    currOp->varField1 = currVar;
-                    currOp->op1Type = OPNODE_VAR;
-                } else {
+                if (currValType == VALTYPE_NUMBER) {
                     currOp->val1 = currNum;
                     currOp->op1Type = OPNODE_CONST;
-                }
+                } else if (currValType == VALTYPE_VAR) {
+                    currOp->varField1 = currVar;
+                    currOp->op1Type = OPNODE_VAR;
+                } else if (currValType == VALTYPE_OP) {
+                    currOp->op1 = currValOp;
+                    currOp->op1Type = OPNODE_OP;
+                } 
                 if (!node_stack_is_empty(&stack)) {
                     int currOpPre = PRECEDENCE[currOp->operation];
                     if (currOpPre > PRECEDENCE[stack.top->ptr->operation]) {
                         // if the precedence of the new operator is higher, leave the stack as-is
                     } else {
-                        // first, find the node furthest back that still has higher precedence
+                        // first, find the node furthest back that has lower precedence
                         opStackNode* currOpInStack = stack.top;
-                        while (currOpInStack->next != NULL && currOpPre <= PRECEDENCE[currOpInStack->next->ptr->operation]) currOpInStack = currOpInStack->next;
+                        while (currOpInStack->prev != NULL && currOpPre <= PRECEDENCE[currOpInStack->prev->ptr->operation]) {
+                            currOpInStack = currOpInStack->prev;
+                        }
                         // connect currOp to that node
                         currOpInStack->ptr->parent = currOp;
                         currOp->op1 = currOpInStack->ptr;
                         currOp->op1Type = OPNODE_OP;
                         // now, while traversing the stack upwards, connect the nodes with eachother
-                        while (currOpInStack != NULL) {
-                            opStackNode* nextOpInStack = currOpInStack->prev;
-                            if (nextOpInStack == NULL) break;
+                        while (currOpInStack->next != NULL) {
+                            opStackNode* nextOpInStack = currOpInStack->next;
                             nextOpInStack->ptr->parent = currOpInStack->ptr;
                             currOpInStack->ptr->op2 = nextOpInStack->ptr;
                             currOpInStack->ptr->op2Type = OPNODE_OP;
@@ -168,71 +169,136 @@ opNode* parse_term(u8* input) {
                             currOpInStack = nextOpInStack;
                         }
                         // finally, add the constant value/variable as val2 on the last operation in the stack
-                        if (numIsVar) {
-                            currOpInStack->ptr->varField2 = currVar;
-                            currOpInStack->ptr->op2Type = OPNODE_VAR;
-                        } else {
+                        if (currValType == VALTYPE_NUMBER) {
                             currOpInStack->ptr->val2 = currNum;
                             currOpInStack->ptr->op2Type = OPNODE_CONST;
+                        } else if (currValType == VALTYPE_VAR) {
+                            currOpInStack->ptr->varField2 = currVar;
+                            currOpInStack->ptr->op2Type = OPNODE_VAR;
+                        } else if (currValType == VALTYPE_OP) {
+                            currOpInStack->ptr->op2 = currValOp;
+                            currOpInStack->ptr->op2Type = OPNODE_OP;
                         }
                         node_stack_remove(&stack, currOpInStack);
                     }
                 }
                 node_stack_push(&stack, currOp);
                 currNum = 0;
-                printf("Current stack: ");
-                opStackNode* curr = stack.top;
-                char opNameBuf[16];
-                while (curr != NULL) {
-                    switch(curr->ptr->operation) {
-                        case 0:
-                            strcpy(opNameBuf, "+");
-                            break;
-                        case 1:
-                            strcpy(opNameBuf, "-");
-                            break;
-                        case 2:
-                            strcpy(opNameBuf, "*");
-                            break;
-                        case 3:
-                            strcpy(opNameBuf, "/");
-                            break;
-                    }
-                    printf("%s ", opNameBuf);
-                    curr = curr->next;
-                }
-                printf("\n");
                 break;
             case OPTYPE_VAR:
-                numIsVar = 1;
+                currValType = VALTYPE_VAR;
                 currVar = f.value;
                 currNum = 0;
+                break;
+            case OPTYPE_BEGIN:
+                currOp = (opNode *) malloc(sizeof(opNode));
+                memset(currOp, 0, sizeof(opNode));
+                currOp->operation = f.value;
+                node_stack_push(&stack, currOp);
+                break;
+            case OPTYPE_END:
+                if (f.value == (OP_BRACK_CLOSE & 0b11111)) {
+                    opStackNode* currOpInStack = stack.top;
+                    //printf("current type is %d\n", currValType);
+                    if (currValType == VALTYPE_NUMBER) {
+                        currOpInStack->ptr->val2 = currNum;
+                        currOpInStack->ptr->op2Type = OPNODE_CONST;
+                    } else if (currValType == VALTYPE_VAR) {
+                        currOpInStack->ptr->varField2 = currVar;
+                        currOpInStack->ptr->op2Type = OPNODE_VAR;
+                    } else if (currValType == VALTYPE_OP) {
+                        currOpInStack->ptr->op2 = currValOp;
+                        currOpInStack->ptr->op2Type = OPNODE_OP;
+                    }
+                    opNode* lastRemaining;
+                    while (currOpInStack != NULL) {
+                        if (currOpInStack->ptr->operation == (OP_BRACK_OPEN & 0b11111)) break;
+                        // connect the nodes with each other
+                        opStackNode* nextOpInStack = currOpInStack->prev;
+                        if (nextOpInStack == NULL) break;
+                        currOpInStack->ptr->parent = nextOpInStack->ptr;
+                        nextOpInStack->ptr->op2 = currOpInStack->ptr;
+                        nextOpInStack->ptr->op2Type = OPNODE_OP;
+                        lastRemaining = currOpInStack->ptr;
+                        node_stack_remove(&stack, currOpInStack);
+                        currOpInStack = nextOpInStack;
+                    }
+                    currValOp = lastRemaining;
+                    currValType = VALTYPE_OP;
+                    node_stack_remove(&stack, currOpInStack);
+                }
+                break;
         }
+        /*printf("Current stack: ");
+        opStackNode* curr = stack.top;
+        char opNameBuf[16];
+        while (curr != NULL) {
+            switch(curr->ptr->operation) {
+                case 0:
+                    strcpy(opNameBuf, "+");
+                    break;
+                case 1:
+                    strcpy(opNameBuf, "-");
+                    break;
+                case 2:
+                    strcpy(opNameBuf, "*");
+                    break;
+                case 3:
+                    strcpy(opNameBuf, "/");
+                    break;
+                case 4:
+                    strcpy(opNameBuf, "(");
+                    break;
+            }
+            printf("%s ", opNameBuf);
+            curr = curr->prev;
+        }
+        printf("\n");*/
         pos++;
+    }
+    if (currValType == VALTYPE_OP) {
+        if (stack.top == NULL) {
+            currOp = NULL;
+        } else {
+            currOp = stack.top->ptr;
+            currOp->op2Type = OPNODE_OP;
+            currOp->op2 = currValOp;
+        }
     }
     if (currOp == NULL) {
         currOp = (opNode *) malloc(sizeof(opNode));
         currOp->operation = 0; // plus
-        if (numIsVar) {
-            currOp->op1Type = OPNODE_VAR;
-            currOp->val1 = currVar;
-        } else {
+        if (currValType == VALTYPE_NUMBER) {
             currOp->op1Type = OPNODE_CONST;
             currOp->val1 = currNum;
+        } else if (currValType == VALTYPE_VAR) {
+            currOp->op1Type = OPNODE_VAR;
+            currOp->val1 = currVar;
+        } else if (currValType == VALTYPE_OP) {
+            currOp->op1Type = OPNODE_OP;
+            currOp->op1 = currValOp;
         }
         currOp->op2Type = OPNODE_CONST;
         currOp->val2 = 0;
+        /*printf("Traversing nodes:\n");
+        print_node(currOp);
+        printf("\n");*/
         return currOp;
     }
-    if (numIsVar) {
-        currOp->val2 = currVar;
-        currOp->op2Type = OPNODE_VAR;
-    } else {
-        currOp->val2 = currNum;
-        currOp->op2Type = OPNODE_CONST;
+    if (currOp->op2Type == VALTYPE_UNDEF) {
+        if (currValType == VALTYPE_NUMBER) {
+            currOp->op2Type = OPNODE_CONST;
+            currOp->val2 = currNum;
+        } else if (currValType == VALTYPE_VAR) {
+            currOp->op2Type = OPNODE_VAR;
+            currOp->val2 = currVar;
+        } else if (currValType == VALTYPE_OP) {
+            currOp->op2Type = OPNODE_OP;
+            currOp->op2 = currValOp;
+        }
     }
     node_stack_pop(&stack); // remove currOp from stack
-    printf("Nodes remaining on stack: %d\n", node_stack_length(&stack));
+    //printf("Nodes remaining on stack: %d\n", node_stack_length(&stack));
     while (!node_stack_is_empty(&stack)) {
         opNode* poppedNode = node_stack_pop(&stack);
         currOp->parent = poppedNode;
@@ -312,6 +378,22 @@ void print_char_console(u8 input) {
                 break;
             case 2:
                 strcpy(varNameBuf, "z");
+                break;
+        }
+        printf("%s", varNameBuf);
+    } else if (getFields(input).type == OPTYPE_BEGIN) {
+        char varNameBuf[16];
+        switch(getFields(input).value) {
+            case 4:
+                strcpy(varNameBuf, "(");
+                break;
+        }
+        printf("%s", varNameBuf);
+    } else if (getFields(input).type == OPTYPE_END) {
+        char varNameBuf[16];
+        switch(getFields(input).value) {
+            case 4:
+                strcpy(varNameBuf, ")");
                 break;
         }
         printf("%s", varNameBuf);
