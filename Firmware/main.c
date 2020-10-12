@@ -7,6 +7,7 @@
 #include "common/term.h"
 #include "common/mandel.h"
 #include "common/graph.h"
+#include "common/mathinput.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -43,12 +44,11 @@ enum modes {
 	m_solve_menu
 };
 
-int cursorX = 0, cursorY = 0;
-char currLine[0x20] = "";
 char resBuf[0x20];
 int lastButton = -1;
-u8 currTerm[0x20];
-opNode* termTree;
+opNode *termTree;
+
+inputBox *mainScreenInput;
 
 int currMode = m_calc;
 int needsUpdating = 1;
@@ -64,18 +64,13 @@ int main(void) {
 	eep_initialize();
 	
 	gui_draw_image();
-
-	#ifndef console
-	char strBuf[16];
-	sprintf(strBuf, "%02x", MCUSR);
-	gui_draw_string(strBuf, 128 - 3 * 6, 64 - 6, FNT_SM, 0);
-	MCUSR = 0;
-	#endif
 	
 	_delay_ms(2000);
 	
 	disp_clear();
 	buttons_initialize();
+
+	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
 
 	#ifndef console
 	// init ADC
@@ -163,7 +158,7 @@ int main(void) {
 				case m_graph:
 					disp_clear();
 					graph_reset_state();
-					termTree = parse_term(currTerm);
+					termTree = parse_term(mainScreenInput->buffer);
 					graph_draw(termTree);
 					term_free(termTree);
 					needsUpdating = 0;
@@ -178,32 +173,20 @@ int main(void) {
 }
 
 void buttonPressed_calc(int buttonID) {
-	if (buttonID != enter && currTerm[cursorX] == CHAR_END) {
-		for (int i = 0; i < 0x80; i++) currTerm[i] = 0;
-		cursorX = 0;
-		disp_clear();
-	}
-	if (buttonID <= nine) {
-		currTerm[cursorX] = buttonID;
-		gui_draw_char(cursorX * 8, 0, buttonID, FNT_MD, 1);
-		cursorX++;
-	} else if (buttonID <= divide) {
-		currTerm[cursorX] = (buttonID - 10) | (OPTYPE_SIMPLE << 5);
-		gui_draw_char(cursorX * 8, 0, 62 - 10 + buttonID, FNT_MD, 1);
-		cursorX++;
-	}
+	mathinput_buttonPress(mainScreenInput, buttonID);
+
 	if (buttonID == enter) {
-		currTerm[cursorX] = CHAR_END;
-		termTree = parse_term(currTerm);
+		termTree = parse_term(mainScreenInput->buffer);
 		double res = evaluate_term(termTree, 0);
 		term_free(termTree);
 		char resBuf[16];
 		sprintf(resBuf, "%.3f", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 	}
+
 	if (buttonID == f2) {
 		currMode = m_graph;
-		currTerm[cursorX] = CHAR_END;
+		mathinput_buttonPress(mainScreenInput, enter);
 		needsUpdating = 1;
 	}
 	if (buttonID == f3) {
@@ -216,21 +199,6 @@ void buttonPressed_calc(int buttonID) {
 	}
 	if (buttonID == back) {
 		currMode = m_calc;
-	}
-	if (buttonID == variable) {
-		currTerm[cursorX] = VAR_X;
-		gui_draw_char(cursorX * 8, 0, 59, FNT_MD, 1);
-		cursorX++;
-	}
-	if (buttonID == bracket_open) {
-		currTerm[cursorX] = OP_BRACK_OPEN;
-		gui_draw_char(cursorX * 8, 0, 68, FNT_MD, 1);
-		cursorX++;
-	}
-	if (buttonID == bracket_close) {
-		currTerm[cursorX] = OP_BRACK_CLOSE;
-		gui_draw_char(cursorX * 8, 0, 69, FNT_MD, 1);
-		cursorX++;
 	}
 }
 
@@ -269,7 +237,6 @@ void buttonPressed(int buttonID) {
 		case m_solve_menu:
 			if (buttonID == back) {
 				currMode = m_calc;
-				cursorX = 0;
 				disp_clear();
 				needsUpdating = 1;
 			}

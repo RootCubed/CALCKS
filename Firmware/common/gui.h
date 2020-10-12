@@ -1,6 +1,8 @@
 #ifndef GUI_H_
 #define GUI_H_
 
+extern const int fonts[2][4];
+
 void gui_draw_byte(char, int, int);
 void gui_update_byte(char, int, int);
 
