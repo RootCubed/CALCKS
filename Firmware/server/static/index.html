@@ -30,6 +30,12 @@
             touch-action: manipulation; /* disable double-tap on mobile */
         }
 
+        #buttons_fn {
+            margin: 0 auto;
+            touch-action: manipulation;
+            width: 512px;
+        }
+
         button {
             width: 100%;
             padding: 10px;
@@ -58,30 +64,63 @@
         Der einzige Unterschied ist die Kommunikation mit den Hardwareschnittstellen (Display & Knöpfe).</p>
     <div id="calcEmu">
         <canvas id="calculator" width="128" height="64"></canvas>
+        <table id="buttons_fn">
+            <tbody>
+                <tr>
+                    <td><button onclick='socket.emit("button", 30);'>fn1</button></td>
+                    <td><button onclick='socket.emit("button", 31);'>fn2</button></td>
+                    <td><button onclick='socket.emit("button", 32);'>fn3</button></td>
+                    <td><button onclick='socket.emit("button", 33);'>fn4</button></td>
+                </tr>
+            </tbody>
+        </table>
         <table id="buttons">
             <tbody>
                 <tr>
-                    <td><button onclick='socket.emit("button", 7);'>7</button></td>
-                    <td><button onclick='socket.emit("button", 8);'>8</button></td>
-                    <td><button onclick='socket.emit("button", 9);'>9</button></td>
-                    <td><button onclick='socket.emit("button", 10);'>+</button></td>
+                    <td><button onclick='socket.emit("button", 35);'>btn35</button></td>
+                    <td><button onclick='socket.emit("button", 34);'>back</button></td>
                 </tr>
                 <tr>
-                    <td><button onclick='socket.emit("button", 4);'>4</button></td>
-                    <td><button onclick='socket.emit("button", 5);'>5</button></td>
-                    <td><button onclick='socket.emit("button", 6);'>6</button></td>
-                    <td><button onclick='socket.emit("button", 11);'>-</button></td>
+                    <td><button onclick='socket.emit("button", 20);'>btn20</button></td>
+                    <td><button onclick='socket.emit("button", 26);'>btn26</button></td>
+                    <td><button onclick='socket.emit("button", 27);'>btn27</button></td>
+                    <td><button onclick='socket.emit("button", 28);'>btn28</button></td>
+                    <td><button onclick='socket.emit("button", 29);'>btn29</button></td>
                 </tr>
                 <tr>
-                    <td><button onclick='socket.emit("button", 1);'>1</button></td>
-                    <td><button onclick='socket.emit("button", 2);'>2</button></td>
-                    <td><button onclick='socket.emit("button", 3);'>3</button></td>
-                    <td><button onclick='socket.emit("button", 12);'>/</button></td>
+                    <td><button onclick='socket.emit("button", 15);'>btn15</button></td>
+                    <td><button onclick='socket.emit("button", 21);'>btn21</button></td>
+                    <td><button onclick='socket.emit("button", 22);'>(</button></td>
+                    <td><button onclick='socket.emit("button", 23);'>)</button></td>
+                    <td><button onclick='socket.emit("button", 24);'>/</button></td>
                 </tr>
                 <tr>
-                    <td><button onclick='socket.emit("button", 0);'>0</button></td>
-                    <td colspan="2"><button onclick='socket.emit("button", 14);'>=</button></td>
-                    <td><button onclick='socket.emit("button", 13);'>*</button></td>
+                    <td><button onclick='socket.emit("button", 10);'>btn10</button></td>
+                    <td><button onclick='socket.emit("button", 16);'>7</button></td>
+                    <td><button onclick='socket.emit("button", 17);'>8</button></td>
+                    <td><button onclick='socket.emit("button", 18);'>9</button></td>
+                    <td><button onclick='socket.emit("button", 19);'>*</button></td>
+                </tr>
+                <tr>
+                    <td><button onclick='socket.emit("button", 5);'>var</button></td>
+                    <td><button onclick='socket.emit("button", 11);'>4</button></td>
+                    <td><button onclick='socket.emit("button", 12);'>5</button></td>
+                    <td><button onclick='socket.emit("button", 13);'>6</button></td>
+                    <td><button onclick='socket.emit("button", 14);'>-</button></td>
+                </tr>
+                <tr>
+                    <td><button onclick='socket.emit("button", 0);'>off</button></td>
+                    <td><button onclick='socket.emit("button", 6);'>1</button></td>
+                    <td><button onclick='socket.emit("button", 7);'>2</button></td>
+                    <td><button onclick='socket.emit("button", 8);'>3</button></td>
+                    <td><button onclick='socket.emit("button", 9);'>+</button></td>
+                </tr>
+                <tr>
+                    <td><button onclick='socket.emit("button", 0);'>on</button></td>
+                    <td><button onclick='socket.emit("button", 1);'>btn1</button></td>
+                    <td><button onclick='socket.emit("button", 2);'>0</button></td>
+                    <td><button onclick='socket.emit("button", 3);'>btn3</button></td>
+                    <td><button onclick='socket.emit("button", 4);'>enter</button></td>
                 </tr>
             </tbody>
         </table>

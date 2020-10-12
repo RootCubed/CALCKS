@@ -9,7 +9,7 @@ const { spawn } = require("child_process");
 let runningCalcs = {};
 
 io.on("connection", socket => {
-    runningCalcs[socket.id] = [spawn("calc.exe", {encoding: "binary"}), Buffer.alloc(128 * 8), undefined];
+    runningCalcs[socket.id] = [spawn(__dirname + "/calc.exe", {encoding: "binary"}), Buffer.alloc(128 * 8), undefined];
     let userCalc = runningCalcs[socket.id][0];
     let userCalcBuf = runningCalcs[socket.id][1];
     userCalc.stdout.on("data", data => {
