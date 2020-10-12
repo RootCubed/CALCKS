@@ -23,6 +23,18 @@
 
 extern const char BUTTON_MAP[35];
 
+// button names
+typedef enum buttons {
+    zero, one, two, three, four, five, six, seven, eight, nine,
+    plus, minus, multiply, divide,
+    enter,
+    off,
+    f1, f2, f3, f4,
+    back,
+    variable,
+    bracket_open, bracket_close
+} buttons;
+
 
 void buttons_initialize();
 char buttons_get_special();

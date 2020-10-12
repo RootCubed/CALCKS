@@ -37,9 +37,10 @@
 #endif
 
 enum modes {
-	m_calc = 0,
-	m_mandelbrot = 1,
-	m_graph = 2
+	m_calc,
+	m_mandelbrot,
+	m_graph,
+	m_solve_menu
 };
 
 int cursorX = 0, cursorY = 0;
@@ -91,7 +92,6 @@ int main(void) {
 	int chargingAnimDelay = 0;
 
 	while (1) {
-		//disp_clear();
 		buttons_get_special();
 		int btnUnmapped = buttons_getPressed();
 		int currButton = -1;
@@ -151,17 +151,24 @@ int main(void) {
 					needsUpdating = 0;
 					gui_tab_button("Menu", 0);
 					gui_tab_button("Graph", 28);
-					gui_tab_button("Mandel", 62);
+					gui_tab_button("Mandel", 61);
+					gui_tab_button("Solv", 100);
 					break;
 				case m_mandelbrot:
+					disp_clear();
+					mandel_reset_state();
 					mandel_draw();
 					needsUpdating = 0;
 					break;
 				case m_graph:
+					disp_clear();
+					graph_reset_state();
 					termTree = parse_term(currTerm);
 					graph_draw(termTree);
 					term_free(termTree);
 					needsUpdating = 0;
+					break;
+				case m_solve_menu:
 					break;
 			}
 		}
@@ -170,24 +177,22 @@ int main(void) {
 	}
 }
 
-void buttonPressed(int buttonID) {
-	if (buttonID != 15 && currTerm[cursorX] == CHAR_END) {
+void buttonPressed_calc(int buttonID) {
+	if (buttonID != enter && currTerm[cursorX] == CHAR_END) {
 		for (int i = 0; i < 0x80; i++) currTerm[i] = 0;
 		cursorX = 0;
 		disp_clear();
 	}
-	if (buttonID < 10) {
+	if (buttonID <= nine) {
 		currTerm[cursorX] = buttonID;
 		gui_draw_char(cursorX * 8, 0, buttonID, FNT_MD, 1);
 		cursorX++;
-	} else {
-		if (buttonID < 14) {
-			currTerm[cursorX] = (buttonID - 10) | (OPTYPE_SIMPLE << 5);
-			gui_draw_char(cursorX * 8, 0, 62 - 10 + buttonID, FNT_MD, 1);
-			cursorX++;
-		}
+	} else if (buttonID <= divide) {
+		currTerm[cursorX] = (buttonID - 10) | (OPTYPE_SIMPLE << 5);
+		gui_draw_char(cursorX * 8, 0, 62 - 10 + buttonID, FNT_MD, 1);
+		cursorX++;
 	}
-	if (buttonID == 14) {
+	if (buttonID == enter) {
 		currTerm[cursorX] = CHAR_END;
 		termTree = parse_term(currTerm);
 		double res = evaluate_term(termTree, 0);
@@ -196,7 +201,41 @@ void buttonPressed(int buttonID) {
 		sprintf(resBuf, "%.3f", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 	}
-	if (buttonID == 15) {
+	if (buttonID == f2) {
+		currMode = m_graph;
+		currTerm[cursorX] = CHAR_END;
+		needsUpdating = 1;
+	}
+	if (buttonID == f3) {
+		currMode = m_mandelbrot;
+		needsUpdating = 1;
+	}
+	if (buttonID == f4) {
+		currMode = m_solve_menu;
+		needsUpdating = 1;
+	}
+	if (buttonID == back) {
+		currMode = m_calc;
+	}
+	if (buttonID == variable) {
+		currTerm[cursorX] = VAR_X;
+		gui_draw_char(cursorX * 8, 0, 59, FNT_MD, 1);
+		cursorX++;
+	}
+	if (buttonID == bracket_open) {
+		currTerm[cursorX] = OP_BRACK_OPEN;
+		gui_draw_char(cursorX * 8, 0, 68, FNT_MD, 1);
+		cursorX++;
+	}
+	if (buttonID == bracket_close) {
+		currTerm[cursorX] = OP_BRACK_CLOSE;
+		gui_draw_char(cursorX * 8, 0, 69, FNT_MD, 1);
+		cursorX++;
+	}
+}
+
+void buttonPressed(int buttonID) {
+	if (buttonID == off) {
 		// put display into sleep mode (turn display off, turn all points on)
 
 		#ifndef console
@@ -221,34 +260,20 @@ void buttonPressed(int buttonID) {
 		disp_command(DISP_CMD_ALL_ONOFF | 0);
 		#endif
 	}
-	if (buttonID == 16) {
-		currMode = m_mandelbrot;
-	}
-	if (buttonID == 17) {
-		mandel_reset_state();
-		graph_reset_state();
-		currMode = m_calc;
-		disp_clear();
-		needsUpdating = 1;
-	}
-	if (buttonID == 18) {
-		currMode = m_graph;
-		currTerm[cursorX] = CHAR_END;
-	}
-	if (buttonID == 19) {
-		currTerm[cursorX] = VAR_X;
-		gui_draw_char(cursorX * 8, 0, 59, FNT_MD, 1);
-		cursorX++;
-	}
-	if (buttonID == 20) {
-		currTerm[cursorX] = OP_BRACK_OPEN;
-		gui_draw_char(cursorX * 8, 0, 68, FNT_MD, 1);
-		cursorX++;
-	}
-	if (buttonID == 21) {
-		currTerm[cursorX] = OP_BRACK_CLOSE;
-		gui_draw_char(cursorX * 8, 0, 69, FNT_MD, 1);
-		cursorX++;
+	switch (currMode) {
+		case m_calc:
+			buttonPressed_calc(buttonID);
+			break;
+		case m_graph:
+		case m_mandelbrot:
+		case m_solve_menu:
+			if (buttonID == back) {
+				currMode = m_calc;
+				cursorX = 0;
+				disp_clear();
+				needsUpdating = 1;
+			}
+			break;
 	}
 }
 

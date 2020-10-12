@@ -7,14 +7,14 @@
 #include "../common/gui.h"
 
 const char BUTTON_MAP[35] = {
-    15, -1,  0, -1, 14,
-	19,  1,  2,  3, 10,
-	-1,  4,  5,  6, 11,
-	-1,  7,  8,  9, 12,
-	-1, -1, 20, 21, 13,
-    -1, -1, -1, -1, -1,
-    -1, 18, 16, -1,
-	17
+    off,        -1,    zero,         -1,             enter,
+	variable,   one,   two,          three,          plus,
+	-1,         four,  five,         six,            minus,
+	-1,         seven, eight,        nine,           multiply,
+	-1,         -1,    bracket_open, bracket_close,  divide,
+    -1,         -1,    -1,           -1,             -1,
+    f1,         f2,    f3,           f4,
+	back
 };
 
 void buttons_initialize() {
