@@ -1,7 +1,4 @@
 #include "gui.h"
-#include "eep.h"
-#include "display.h"
-#include <math.h>
 
 unsigned char disp_eeprom_buf[1024];
 
@@ -109,11 +106,29 @@ void convert_string(const char *str, char *buf) {
                 case ' ':
                     buf[i] = -1;
                     break;
-                case '-':
-                    buf[i] = 70;
-                    break;
                 case '.':
                     buf[i] = 71;
+                    break;
+                case '+':
+                    buf[i] = 62;
+                    break;
+                case '-':
+                    buf[i] = 63;
+                    break;
+                case '*':
+                    buf[i] = 64;
+                    break;
+                case '/':
+                    buf[i] = 65;
+                    break;
+                case '=':
+                    buf[i] = 66;
+                    break;
+                case '(':
+                    buf[i] = 68;
+                    break;
+                case ')':
+                    buf[i] = 69;
                     break;
             }
         }

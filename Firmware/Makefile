@@ -5,10 +5,10 @@ SHELL=cmd
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
 common-files = common/*.h
-common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o
+common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o
 console-files = console/buttons.o console/display.o console/eep.o
 
-default: eeprom upload clean
+default: eeprom upload
 
 %.o: %.c
 	$(CC) -c $^ $(CCFLAGS)

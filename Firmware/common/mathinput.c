@@ -16,11 +16,10 @@ void mathinput_freeBox(inputBox *box) {
 }
 
 void mathinput_buttonPress(inputBox *box, int buttonID) {
-    if (buttonID != enter && box->buffer[box->cursor] == CHAR_END) {
-        while(1);
+    if (box->buffer[box->cursor] == CHAR_END) {
 		box->cursor = 0;
         box->buffer[0] = CHAR_END;
-		gui_clear_rect(box->posX, box->posY, fonts[box->font][3], box->maxChars * fonts[box->font][2]);
+		gui_clear_rect(box->posX, box->posY, box->maxChars * fonts[box->font][2], fonts[box->font][3]);
 	}
     if (buttonID == enter) {
 		box->buffer[box->cursor] = CHAR_END;
@@ -49,7 +48,22 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
 	}
     if (charToDraw != -1) {
         box->buffer[box->cursor] = charToPutInBuffer;
-        gui_draw_char(box->cursor * fonts[box->font][2], 0, charToDraw, box->font, 0);
+        gui_draw_char(box->posX + box->cursor * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
         box->cursor++;
     }
+}
+
+void mathinput_blinkCursor(inputBox *box, int onOff) {
+    if (onOff) {
+        gui_draw_rect(box->posX + box->cursor * fonts[box->font][3], box->posY, fonts[box->font][3], fonts[box->font][2], 1);
+    } else {
+        gui_clear_rect(box->posX + box->cursor * fonts[box->font][3], box->posY, fonts[box->font][3], fonts[box->font][2]);
+    }
+}
+
+double mathinput_calcContent(inputBox *box) {
+    opNode *termTree = parse_term(box->buffer);
+    double res = evaluate_term(termTree, 0);
+    term_free(termTree);
+    return res;
 }

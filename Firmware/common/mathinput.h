@@ -21,4 +21,8 @@ void mathinput_freeBox(inputBox *);
 
 void mathinput_buttonPress(inputBox *, int);
 
+void mathinput_blinkCursor(inputBox *, int);
+
+double mathinput_calcContent(inputBox *);
+
 #endif

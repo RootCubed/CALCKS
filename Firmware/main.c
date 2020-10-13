@@ -8,6 +8,7 @@
 #include "common/mandel.h"
 #include "common/graph.h"
 #include "common/mathinput.h"
+#include "common/solver.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -71,6 +72,7 @@ int main(void) {
 	buttons_initialize();
 
 	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
+	solver_init();
 
 	#ifndef console
 	// init ADC
@@ -164,6 +166,7 @@ int main(void) {
 					needsUpdating = 0;
 					break;
 				case m_solve_menu:
+					needsUpdating = solver_updateScreen();
 					break;
 			}
 		}
@@ -234,13 +237,19 @@ void buttonPressed(int buttonID) {
 			break;
 		case m_graph:
 		case m_mandelbrot:
-		case m_solve_menu:
 			if (buttonID == back) {
 				currMode = m_calc;
 				disp_clear();
 				needsUpdating = 1;
 			}
 			break;
+		case m_solve_menu:
+			if (buttonID == back) {
+				currMode = m_calc;
+				disp_clear();
+				needsUpdating = 1;
+			}
+			solver_buttonPress(buttonID);
 	}
 }
 

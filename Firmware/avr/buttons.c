@@ -38,9 +38,6 @@ void buttons_initialize() {
 
 char buttons_get_special() {
 	char res = PINC;
-	//char buf[16];
-	//sprintf(buf, "%02x", PINC);
-	//gui_draw_string(buf, 128 - 6 * 2, 60, 0, 0);
 	return res;
 }
 
