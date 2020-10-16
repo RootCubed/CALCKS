@@ -13,6 +13,7 @@ typedef struct {
     int posY;
     char *buffer;
     int cursor;
+    int currWidth;
 } inputBox;
 
 inputBox *mathinput_initBox(int, int, int, int);
@@ -22,6 +23,8 @@ void mathinput_freeBox(inputBox *);
 void mathinput_buttonPress(inputBox *, int);
 
 void mathinput_blinkCursor(inputBox *, int);
+
+void mathinput_clear(inputBox *);
 
 double mathinput_calcContent(inputBox *);
 

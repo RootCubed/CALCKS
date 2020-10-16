@@ -11,13 +11,14 @@ double map(double value, double i1, double i2, double o1, double o2) {
     return (value - i1) * (rangeOutput / rangeInput) + o1;
 }
 
-void graph_draw(opNode* term) {
+void graph_draw(char* term) {
     double rangeX1 = -10;
     double rangeX2 = 10;
     double rangeY1 = 10;
     double rangeY2 = -10;
     if (!graph_hasDrawn) {
         disp_clear();
+        opNode *termTree = parse_term(term);
         double transf0x = map(0, rangeX1, rangeX2, 0, 128);
         double transf0y = map(0, rangeY1, rangeY2, 0, 64);
         gui_draw_line(0, transf0y, 128, transf0y);
@@ -25,12 +26,13 @@ void graph_draw(opNode* term) {
         double prevRes = 0;
         for (double x = 0; x < 128; x += 0.1) {
             double tfX = map(x, 0, 128, rangeX1, rangeX2);
-            double funcRes = evaluate_term(term, tfX);
+            double funcRes = evaluate_term(termTree, tfX);
             int transfY = map(funcRes, rangeY1, rangeY2, 0, 64);
             if (transfY >= 0 && transfY <= 64) gui_set_pixel(x, transfY, 1);
             prevRes = funcRes;
         }
         graph_hasDrawn = 1;
+        term_free(termTree);
     }
 }
 

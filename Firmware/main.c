@@ -1,5 +1,7 @@
 #define F_CPU 8000000L
 
+#define VERSION_STRING "v0.9.0"
+
 #include "common/display.h"
 #include "common/buttons.h"
 #include "common/eep.h"
@@ -42,19 +44,28 @@ enum modes {
 	m_calc,
 	m_mandelbrot,
 	m_graph,
-	m_solve_menu
+	m_solve_menu,
+	m_info
 };
 
 char resBuf[0x20];
 int lastButton = -1;
 opNode *termTree;
 
+char strBuf[16];
+
 inputBox *mainScreenInput;
+int needsClearRes = 0;
 
 int currMode = m_calc;
-int needsUpdating = 1;
+int needsRedraw = 1;
+
+int prevAdc = 0;
+float chargingAnim = 0.2;
+int chargingAnimDelay = 50;
 
 void buttonPressed(int);
+void infoScreen_battery();
 
 int main(void) {
 	#ifdef console
@@ -83,10 +94,6 @@ int main(void) {
 	ADCSRA |= (0b100 << ADPS0); // prescaler 16
 
 	#endif
-	
-	int prevAdc = 0;
-	float chargingAnim = 0.1;
-	int chargingAnimDelay = 0;
 
 	while (1) {
 		buttons_get_special();
@@ -99,83 +106,91 @@ int main(void) {
 			if (currButton != lastButton) {
 				lastButton = currButton;
 				buttonPressed(currButton);
-				needsUpdating = 1;
 			}
 		} else {
 			lastButton = -1;
 		}
 
-		long adc = 0;
-		char strBuf[16];
-
-		#ifndef console
-		// calculate VCC
-		ADCSRA |= _BV(ADSC); // start ADC conversion
-		while (ADCSRA & _BV(ADIF)); // wait for conversion to complete
-		adc = (ADCL | (ADCH << 8));
-		double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917; // more or less accurate
-		
-		if (adc != prevAdc || (PINB & 1) == 0) {
-			if ((PINB & 1) == 0) {// charge controller PROG
-				vcc = chargingAnim + 3.2; // make charging animation
-				chargingAnim += 0.1;
-				if (chargingAnim > 1) chargingAnim = 0.1;
-				if (chargingAnimDelay < 500) {
-					chargingAnimDelay++;
-					goto ifLoopBreak;
-				}
-			} else {
-				chargingAnim = 0.1;
-			}
-			chargingAnimDelay = 0;
-			gui_draw_string(strBuf, 128 - 13 * 6, 49, 0, 0);
-			double percentage = (vcc - 3.2) / (4.2 - 3.2); // interpolate linearly between 3.2 and 4.2
-			
-			gui_draw_rect(104, 0, 22, 6, 0);
-			gui_draw_line(127, 2, 127, 4);
-			for (int i = 0; i < (int) (percentage * 22); i++) {
-				gui_draw_line(104 + i, 0, 104 + i, 6);
-			}
-			gui_clear_rect(104 + (int) (percentage * 22), 1, 22 - ((int) (percentage * 22)), 4);
-		}
-		ifLoopBreak:
-		prevAdc = adc;
-		#endif
-
-		if (needsUpdating) {
-			switch (currMode) {
-				case m_calc:
-					needsUpdating = 0;
-					gui_tab_button("Menu", 0);
+		switch (currMode) {
+			case m_calc:
+				if (needsRedraw) {
+					gui_tab_button("Info", 0);
 					gui_tab_button("Graph", 28);
 					gui_tab_button("Mandel", 61);
 					gui_tab_button("Solv", 100);
-					break;
-				case m_mandelbrot:
+				}
+				needsRedraw = 0;
+				break;
+			case m_mandelbrot:
+				mandel_draw();
+				break;
+			case m_graph:
+				graph_draw(mainScreenInput->buffer);
+				break;
+			case m_solve_menu:
+				solver_updateScreen();
+				break;
+			case m_info:
+				if (needsRedraw) {
 					disp_clear();
-					mandel_reset_state();
-					mandel_draw();
-					needsUpdating = 0;
-					break;
-				case m_graph:
-					disp_clear();
-					graph_reset_state();
-					termTree = parse_term(mainScreenInput->buffer);
-					graph_draw(termTree);
-					term_free(termTree);
-					needsUpdating = 0;
-					break;
-				case m_solve_menu:
-					needsUpdating = solver_updateScreen();
-					break;
-			}
+					prevAdc = 0;
+					chargingAnimDelay = 50;
+					gui_draw_string("CALCKS", 5, 64 - 32, FNT_MD, 0);
+					gui_draw_string(VERSION_STRING, 5 + 7 * 8, 64 - 32, FNT_MD, 0);
+					gui_draw_string("(c) Liam Braun 2020", 5, 64 - 8, FNT_SM, 0);
+					needsRedraw = 0;
+				}
+				infoScreen_battery();
 		}
 
-		_delay_ms(1);
+		_delay_ms(10);
 	}
 }
 
+void infoScreen_battery() {
+	#ifndef console
+	// calculate VCC
+	ADCSRA |= _BV(ADSC); // start ADC conversion
+	while (ADCSRA & _BV(ADIF)); // wait for conversion to complete
+	long adc = (ADCL | (ADCH << 8));
+	double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917; // more or less accurate
+	
+	if (adc != prevAdc || (PINB & 1) == 0) {
+		double percentage;
+		if ((PINB & 1) == 0) { // charge controller PROG
+			if (chargingAnimDelay < 50) {
+				chargingAnimDelay++;
+				goto ifLoopBreak;
+			}
+			percentage = chargingAnim; // make charging animation
+			chargingAnim += 0.2;
+			if (chargingAnim > 1) chargingAnim = 0.2;
+			gui_draw_string("Battery charging ", 2, 2, FNT_SM, 0);
+		} else {
+			chargingAnim = 0.2;
+			percentage = (vcc - 3.2) / (4.2 - 3.2); // interpolate linearly between 3.2 and 4.2
+			sprintf(strBuf, "Battery: %.1fV/%d%%", vcc, (int) (percentage * 100));
+			gui_draw_string(strBuf, 2, 2, FNT_SM, 0);
+		}
+		gui_draw_rect(104, 0, 22, 6, 0);
+		gui_draw_line(127, 2, 127, 4);
+		for (int i = 0; i < (int) (percentage * 22); i++) {
+			gui_draw_line(104 + i, 0, 104 + i, 6);
+		}
+		gui_clear_rect(104 + (int) (percentage * 22), 1, 22 - ((int) (percentage * 22)), 4);
+		chargingAnimDelay = 0;
+	}
+	ifLoopBreak:
+	prevAdc = adc;
+	#endif
+}
+
 void buttonPressed_calc(int buttonID) {
+	if (needsClearRes && buttonID != enter) {
+		gui_clear_rect(0, 16, SCREEN_WIDTH, fonts[FNT_MD][3]);
+		needsClearRes = 0;
+	}
+
 	mathinput_buttonPress(mainScreenInput, buttonID);
 
 	if (buttonID == enter) {
@@ -183,22 +198,29 @@ void buttonPressed_calc(int buttonID) {
 		double res = evaluate_term(termTree, 0);
 		term_free(termTree);
 		char resBuf[16];
-		sprintf(resBuf, "%.3f", res);
+		sprintf(resBuf, "%g", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
+		needsClearRes = 1;
 	}
 
+	if (buttonID == f1) {
+		currMode = m_info;
+		needsRedraw = 1;
+	}
 	if (buttonID == f2) {
 		currMode = m_graph;
+		graph_reset_state();
 		mathinput_buttonPress(mainScreenInput, enter);
-		needsUpdating = 1;
+		needsRedraw = 1;
 	}
 	if (buttonID == f3) {
 		currMode = m_mandelbrot;
-		needsUpdating = 1;
+		mandel_reset_state();
+		needsRedraw = 1;
 	}
 	if (buttonID == f4) {
 		currMode = m_solve_menu;
-		needsUpdating = 1;
+		needsRedraw = 1;
 	}
 	if (buttonID == back) {
 		currMode = m_calc;
@@ -237,17 +259,19 @@ void buttonPressed(int buttonID) {
 			break;
 		case m_graph:
 		case m_mandelbrot:
+		case m_info:
 			if (buttonID == back) {
 				currMode = m_calc;
+				mathinput_clear(mainScreenInput);
 				disp_clear();
-				needsUpdating = 1;
+				needsRedraw = 1;
 			}
 			break;
 		case m_solve_menu:
 			if (buttonID == back) {
 				currMode = m_calc;
 				disp_clear();
-				needsUpdating = 1;
+				needsRedraw = 1;
 			}
 			solver_buttonPress(buttonID);
 	}

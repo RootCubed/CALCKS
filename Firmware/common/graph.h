@@ -3,7 +3,7 @@
 
 #include "term.h"
 
-void graph_draw(opNode *);
+void graph_draw(char *);
 void graph_reset_state();
 
 #endif

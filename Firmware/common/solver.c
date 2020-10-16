@@ -3,7 +3,7 @@
 solver solver_s;
 char resBuf[32];
 
-int hasDrawn = 0;
+int solver_needsRedraw = 0;
 int blinkCounter = 0;
 
 void solver_init() {
@@ -18,21 +18,23 @@ void solver_free() {
 }
 
 int solver_updateScreen() {
-    if (!hasDrawn) {
+    if (!solver_needsRedraw) {
         disp_clear();
         gui_draw_string("mx+q=0", 0, 0, FNT_SM, 0);
         gui_draw_string("m=", 0, 10, FNT_MD, 1);
         gui_draw_string("q=", 0, 35, FNT_MD, 0);
         gui_draw_string("Calculate", 0, 50, FNT_MD, 0);
-        hasDrawn = 1;
+        solver_needsRedraw = 1;
     }
     return 1;
 }
 
 void solver_buttonPress(int buttonID) {
     if (buttonID == back) {
-        hasDrawn = 0;
+        solver_needsRedraw = 0;
         solver_s.currentSelected = 0;
+        mathinput_buttonPress(solver_s.m, enter);
+        mathinput_buttonPress(solver_s.q, enter);
     }
     if (solver_s.currentSelected == 0) {
         mathinput_buttonPress(solver_s.m, buttonID);
@@ -53,6 +55,8 @@ void solver_buttonPress(int buttonID) {
                 break;
             case 3:
                 disp_clear();
+                mathinput_buttonPress(solver_s.m, enter);
+                mathinput_buttonPress(solver_s.q, enter);
                 double m = mathinput_calcContent(solver_s.m);
                 double q = mathinput_calcContent(solver_s.q);
                 double x = -q / m;

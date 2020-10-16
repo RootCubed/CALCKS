@@ -130,6 +130,15 @@ void convert_string(const char *str, char *buf) {
                 case ')':
                     buf[i] = 69;
                     break;
+                case ':':
+                    buf[i] = 72;
+                    break;
+                case '^':
+                    buf[i] = 73;
+                    break;
+                case '%':
+                    buf[i] = 74;
+                    break;
             }
         }
         i++;
@@ -189,12 +198,47 @@ void gui_draw_line(int x1, int y1, int x2, int y2) {
     int diffX = x2 - x1;
     int diffY = y2 - y1;
     if (diffX == 0) {
-        for (int i = y1; i <= y2; i++) gui_update_byte(0x01, x1, i); // TODO: optimize vertical lines
+        for (int i = y1; i <= y2; i += 8) {
+            char byteToRemove = 0;
+            for (int j = i; j < MIN(i + 8, y2); j++) {
+                byteToRemove |= (1 << (j - i));
+            }
+            gui_update_byte(byteToRemove, x1, i);
+        }
         return;
     }
     double q = (double) diffY / diffX;
     for (int cX = x1; cX <= x2; cX++) {
         gui_update_byte(0x01, cX, y1 + ceil(q * (cX - x1)));
+    }
+}
+
+void gui_clear_line(int x1, int y1, int x2, int y2) {
+    if (x1 > x2) {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+    }
+    if (y1 > y2) {
+        int tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+    int diffX = x2 - x1;
+    int diffY = y2 - y1;
+    if (diffX == 0) {
+        for (int i = y1; i <= y2; i += 8) {
+            char byteToRemove = 0xFF;
+            for (int j = i; j < MIN(i + 8, y2); j++) {
+                byteToRemove ^= (1 << (j - i));
+            }
+            gui_remove_byte(byteToRemove, x1, i);
+        }
+        return;
+    }
+    double q = (double) diffY / diffX;
+    for (int cX = x1; cX <= x2; cX++) {
+        gui_remove_byte(0xFE, cX, y1 + ceil(q * (cX - x1)));
     }
 }
 
@@ -205,8 +249,10 @@ void gui_draw_rect(int x, int y, int width, int height, int isFilled) {
     gui_draw_line(x, y + height, x + width, y + height);
     gui_draw_line(x + width, y, x + width, y + height);
     if (isFilled) {
-        for (int cX = x; cX < x + width; cX++) {
-            gui_draw_line(cX, y, cX, y + height);
+        int endX = MIN(SCREEN_WIDTH, x + width);
+        int endY = MIN(SCREEN_HEIGHT, y + height);
+        for (int cX = x; cX < endX; cX++) {
+            gui_draw_line(cX, y, cX, endY);
         }
     }
 }
@@ -220,8 +266,10 @@ void gui_draw_circle(int x, int y, int dia, int isFilled) {
 }
 
 void gui_clear_rect(int x, int y, int width, int height) {
-    for (int cX = x; cX < x + width; cX++) {
-        for (int i = y; i <= y + height; i++) gui_remove_byte(0xFE, cX, i); // TODO: optimize vertical lines
+    int endX = MIN(SCREEN_WIDTH, x + width);
+    int endY = MIN(SCREEN_HEIGHT, y + height);
+    for (int cX = x; cX < endX; cX++) {
+        gui_clear_line(cX, y, cX, endY);
     }
 }
 
