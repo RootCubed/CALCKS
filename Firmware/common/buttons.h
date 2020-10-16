@@ -32,7 +32,8 @@ typedef enum buttons {
     f1, f2, f3, f4,
     back,
     variable,
-    bracket_open, bracket_close
+    bracket_open, bracket_close,
+    exponent
 } buttons;
 
 

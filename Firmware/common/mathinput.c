@@ -51,6 +51,10 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
 		charToPutInBuffer = OP_BRACK_CLOSE;
         charToDraw = 69; // )
 	}
+	if (buttonID == exponent) {
+		charToPutInBuffer = OP_POW;
+        charToDraw = 73; // ^
+	}
     if (charToDraw != -1) {
         box->buffer[box->cursor] = charToPutInBuffer;
         box->buffer[box->cursor + 1] = CHAR_END;

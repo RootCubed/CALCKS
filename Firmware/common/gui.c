@@ -154,7 +154,7 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
         if (realStringBuf[i] != -1) {
             gui_draw_char(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
         } else {
-            gui_clear_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3] - 1);
+            gui_clear_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3]);
         }
         i++;
     }
@@ -185,31 +185,34 @@ void gui_set_pixel(int x, int y, int value) {
 }
 
 void gui_draw_line(int x1, int y1, int x2, int y2) {
+    if (x1 == x2) {
+        if (y1 > y2) {
+            int tmp = y1;
+            y1 = y2;
+            y2 = tmp;
+        }
+        for (int i = y1; i <= y2; i += 8) {
+            char byteToAdd = 0;
+            for (int j = i; j <= MIN(i + 8, y2); j++) {
+                byteToAdd |= (1 << (j - i));
+            }
+            gui_update_byte(byteToAdd, x1, i);
+        }
+        return;
+    }
     if (x1 > x2) {
         int tmp = x1;
         x1 = x2;
         x2 = tmp;
-    }
-    if (y1 > y2) {
-        int tmp = y1;
+        tmp = y1;
         y1 = y2;
         y2 = tmp;
     }
     int diffX = x2 - x1;
     int diffY = y2 - y1;
-    if (diffX == 0) {
-        for (int i = y1; i <= y2; i += 8) {
-            char byteToRemove = 0;
-            for (int j = i; j < MIN(i + 8, y2); j++) {
-                byteToRemove |= (1 << (j - i));
-            }
-            gui_update_byte(byteToRemove, x1, i);
-        }
-        return;
-    }
     double q = (double) diffY / diffX;
-    for (int cX = x1; cX <= x2; cX++) {
-        gui_update_byte(0x01, cX, y1 + ceil(q * (cX - x1)));
+    for (double cX = x1; cX <= x2; cX += 0.1) {
+        gui_update_byte(0x01, round(cX), y1 + round(q * (cX - x1)));
     }
 }
 
@@ -229,7 +232,7 @@ void gui_clear_line(int x1, int y1, int x2, int y2) {
     if (diffX == 0) {
         for (int i = y1; i <= y2; i += 8) {
             char byteToRemove = 0xFF;
-            for (int j = i; j < MIN(i + 8, y2); j++) {
+            for (int j = i; j <= MIN(i + 8, y2); j++) {
                 byteToRemove ^= (1 << (j - i));
             }
             gui_remove_byte(byteToRemove, x1, i);

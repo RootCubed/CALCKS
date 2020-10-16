@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 const u8 PRECEDENCE[] = {
     1, 1, // plus, minus
     2, 2, // mult, div
     0,    // brackets
+    3,    // power
 };
 
 //u8 input[] = {OP_BRACK_OPEN, NUM_4, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_BRACK_CLOSE, OP_MULT, NUM_2, CHAR_END};
@@ -339,6 +341,8 @@ double evaluate_term(opNode* startNode, double varVal) {
             return value1 * value2;
         case 3:
             return value1 / value2;
+        case 5:
+            return pow(value1, value2);
     }
 }
 

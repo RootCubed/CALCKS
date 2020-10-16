@@ -21,15 +21,18 @@ void graph_draw(char* term) {
         opNode *termTree = parse_term(term);
         double transf0x = map(0, rangeX1, rangeX2, 0, 128);
         double transf0y = map(0, rangeY1, rangeY2, 0, 64);
-        gui_draw_line(0, transf0y, 128, transf0y);
+        gui_draw_line(0, transf0y, 127, transf0y);
         gui_draw_line(transf0x, 0, transf0x, 64);
         double prevRes = 0;
         for (double x = 0; x < 128; x += 0.1) {
             double tfX = map(x, 0, 128, rangeX1, rangeX2);
             double funcRes = evaluate_term(termTree, tfX);
             int transfY = map(funcRes, rangeY1, rangeY2, 0, 64);
-            if (transfY >= 0 && transfY <= 64) gui_set_pixel(x, transfY, 1);
-            prevRes = funcRes;
+
+            if (x > 0 && ((transfY >= 0 && transfY <= 64) || (prevRes >= 0 && prevRes <= 64))) {
+                gui_draw_line(x - 0.1, prevRes, x, transfY);
+            }
+            prevRes = transfY;
         }
         graph_hasDrawn = 1;
         term_free(termTree);
