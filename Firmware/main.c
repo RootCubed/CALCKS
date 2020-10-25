@@ -52,7 +52,7 @@ char resBuf[0x20];
 int lastButton = -1;
 opNode *termTree;
 
-char strBuf[16];
+char strBuf[64];
 
 inputBox *mainScreenInput;
 int needsClearRes = 0;
@@ -75,7 +75,10 @@ int main(void) {
 	disp_initialize();
 	eep_initialize();
 	
-	gui_draw_image();
+	
+	unsigned char disp_eeprom_buf[1024];
+	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, EEPROM_STARTUP_LEN);
+	gui_draw_image(disp_eeprom_buf);
 	
 	_delay_ms(2000);
 	
@@ -265,6 +268,12 @@ void buttonPressed(int buttonID) {
 				mathinput_clear(mainScreenInput);
 				disp_clear();
 				needsRedraw = 1;
+			}
+			if (buttonID == bracket_open) {
+				disp_clear();
+				gui_draw_string("     Hello      ", 0, 64 - 48, FNT_MD, 0);
+				gui_draw_string("   @Brammyson   ", 0, 64 - 32, FNT_MD, 0);
+				gui_draw_string("   @Kaoskarl    ", 0, 64 - 16, FNT_MD, 0);
 			}
 			break;
 		case m_solve_menu:

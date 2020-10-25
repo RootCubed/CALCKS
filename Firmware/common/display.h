@@ -55,20 +55,20 @@ void disp_show();
 #endif
 
 static const char disp_initSequence[DISP_INIT_LEN] = {
-    DISP_CMD_START_LINE,            // Start at line 0
-    DISP_CMD_ADC,                   // ADC normal -> left to right
+    DISP_CMD_START_LINE | 0b000000, // Start at line 0
+    DISP_CMD_ADC | 0,               // ADC normal -> left to right
     DISP_CMD_COM_OUT_DIR | 0b1000,  // Select reverse common output
-    DISP_CMD_DISP_DIR,              // Set Display direction normal
-    DISP_CMD_LCD_BIAS,              // Set bias 1/9 - duty 1/65
+    DISP_CMD_DISP_DIR | 0,          // Set Display direction normal
+    DISP_CMD_LCD_BIAS | 0,          // Set bias 1/9 - duty 1/65
     DISP_CMD_POWER_CTRL | 0b111,    // Power control: Booster on, Regulator on, Follower on
     DISP_CMD_BOOSTER_RATIO_MODE,    // Booster ratio:
     0x00,                           // 4x
     DISP_CMD_V0_RATIO | 7,          // V0 Voltage set: 7
     DISP_CMD_ELVOL_MODE,            // Electronic volume mode:
     0x16,                           // 22
-    DISP_CMD_INDICATOR_ONOFF,       // Static indicator off
+    DISP_CMD_INDICATOR_ONOFF | 0,   // Static indicator off
     0x00,                           // Flashing mode: 0
-    DISP_CMD_ALL_ONOFF,             // Display all points: no
+    DISP_CMD_ALL_ONOFF | 0,         // Display all points: no
     DISP_CMD_ONOFF | 1              // Display on
 };
 

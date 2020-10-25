@@ -5,7 +5,7 @@
 
 #include "../common/display.h"
 
-char buffer[128*8];
+char buffer[132*8];
 int page = 0;
 int xPos = 0;
 

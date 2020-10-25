@@ -1,4 +1,5 @@
 #include "mathinput.h"
+#include <stdio.h>
 
 inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
     inputBox *theBox = malloc(sizeof(inputBox));
@@ -19,7 +20,7 @@ void mathinput_freeBox(inputBox *box) {
 
 void mathinput_redraw(inputBox *box) {
     int pos = 0;
-    while (box->buffer[pos] != CHAR_END) {
+    while (box->buffer[pos] != CHAR_END && pos < box->maxChars) {
         pos++;
     }
 }

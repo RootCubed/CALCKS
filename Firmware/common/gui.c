@@ -1,7 +1,5 @@
 #include "gui.h"
 
-unsigned char disp_eeprom_buf[1024];
-
 // format: location in EEPROM, size of entire font, width, height
 const int fonts[2][4] = {
 	{ EEPROM_FONT_6x7, EEPROM_FONT_6x7_LEN, 6, 7 },
@@ -161,8 +159,7 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
     return (i - 1) * fonts[font][2];
 }
 
-void gui_draw_image() {
-	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, EEPROM_STARTUP_LEN);
+void gui_draw_image(char buffer[1024]) {
     for (int page = 7; page >= 0; page--) {
         disp_setPage(page);
         disp_setMSBCol(0);
@@ -170,7 +167,7 @@ void gui_draw_image() {
         for (int x = 0; x < 128; x++) {
             char column = 0;
             for (int y = 8; y >= 0; y--) {
-				char curr = disp_eeprom_buf[page * 128 + (x / 8) + y * 16];
+				char curr = buffer[page * 128 + (x / 8) + y * 16];
                 char shift = 7 - (x & 0x7);
                 column += ((curr >> shift) & 1) << y;
             }

@@ -18,7 +18,7 @@ void gui_update_byte(char, int, int);
 
 void gui_draw_char(int, int, int, int, int);
 int gui_draw_string(const char *, int , int, int, int);
-void gui_draw_image();
+void gui_draw_image(char[1024]);
 
 void gui_set_pixel(int, int, int);
 void gui_draw_line(int, int, int, int);

@@ -8,7 +8,7 @@ int blinkCounter = 0;
 
 void solver_init() {
     solver_s.m = mathinput_initBox(FNT_MD, 20, 18, 10);
-    solver_s.q = mathinput_initBox(FNT_MD, 20, 18, 35);
+    solver_s.q = mathinput_initBox(FNT_MD, 20, 18, 30);
     solver_s.currentSelected = 0;
 }
 
@@ -22,7 +22,7 @@ int solver_updateScreen() {
         disp_clear();
         gui_draw_string("mx+q=0", 0, 0, FNT_SM, 0);
         gui_draw_string("m=", 0, 10, FNT_MD, 1);
-        gui_draw_string("q=", 0, 35, FNT_MD, 0);
+        gui_draw_string("q=", 0, 30, FNT_MD, 0);
         gui_draw_string("Calculate", 0, 50, FNT_MD, 0);
         solver_needsRedraw = 1;
     }
@@ -47,10 +47,10 @@ void solver_buttonPress(int buttonID) {
         switch (solver_s.currentSelected) {
             case 1:
                 gui_draw_string("m=", 0, 10, FNT_MD, 0);
-                gui_draw_string("q=", 0, 35, FNT_MD, 1);
+                gui_draw_string("q=", 0, 30, FNT_MD, 1);
                 break;
             case 2:
-                gui_draw_string("q=", 0, 35, FNT_MD, 0);
+                gui_draw_string("q=", 0, 30, FNT_MD, 0);
                 gui_draw_string("Calculate", 0, 50, FNT_MD, 1);
                 break;
             case 3:
