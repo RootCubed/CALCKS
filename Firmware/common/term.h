@@ -19,6 +19,7 @@
 #define NUM_D 0x0D
 #define NUM_E 0x0E
 #define NUM_F 0x0F
+#define NUM_POINT 0x10
 
 #define OP_PLUS  0b00100000
 #define OP_MINUS 0b00100001
@@ -60,8 +61,8 @@ struct opNode {
     u8 op2Type; // 0: op, 1: const, 2: var
     opNode* op1;
     opNode* op2;
-    u64 val1;
-    u64 val2;
+    double val1;
+    double val2;
     u8 varField1;
     u8 varField2;
 };

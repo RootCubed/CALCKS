@@ -33,7 +33,8 @@ typedef enum buttons {
     back,
     variable,
     bracket_open, bracket_close,
-    exponent
+    exponent,
+    point
 } buttons;
 
 

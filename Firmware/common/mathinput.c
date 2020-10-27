@@ -56,6 +56,10 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
 		charToPutInBuffer = OP_POW;
         charToDraw = 73; // ^
 	}
+    if (buttonID == point) {
+        charToPutInBuffer = NUM_POINT;
+        charToDraw = 71; // .
+    } 
     if (charToDraw != -1) {
         box->buffer[box->cursor] = charToPutInBuffer;
         box->buffer[box->cursor + 1] = CHAR_END;

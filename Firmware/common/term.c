@@ -116,20 +116,36 @@ void term_free(opNode* node) {
 }
 
 opNode* parse_term(u8* input) {
-    u64 currNum = 0;
+    double currNum = 0;
     u8 currVar = 0;
     u8 currValType = VALTYPE_NUMBER;
     opNode* currValOp;
     opStack stack = {NULL};
     u8 pos = 0;
     opNode* currOp = NULL;
+    int currNumAfterPoint = -1;
     while (input[pos] != CHAR_END) {
         symbolField f = getFields(input[pos]);
+        if (f.type != OPTYPE_CONST) {
+            currNumAfterPoint = -1;
+        }
         switch (f.type) {
             case OPTYPE_CONST:
+                if (f.value == NUM_POINT) {
+                    currNumAfterPoint = 0;
+                    break;
+                }
                 currValType = VALTYPE_NUMBER;
-                currNum *= 10;
-                currNum += f.value;
+                double valueToAdd = f.value;
+                if (currNumAfterPoint == -1) {
+                    currNum *= 10;
+                } else {
+                    currNumAfterPoint++;
+                    for (int i = 0; i < currNumAfterPoint; i++) {
+                        valueToAdd /= 10;
+                    }
+                }
+                currNum += valueToAdd;
                 break;
             case OPTYPE_SIMPLE:
                 currOp = (opNode *) malloc(sizeof(opNode));

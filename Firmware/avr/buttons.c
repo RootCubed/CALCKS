@@ -7,7 +7,7 @@
 #include "../common/gui.h"
 
 const char BUTTON_MAP[35] = {
-    off,        -1,    zero,         -1,             enter,
+    off,        -1,    zero,         point,          enter,
 	variable,   one,   two,          three,          plus,
 	-1,         four,  five,         six,            minus,
 	exponent,   seven, eight,        nine,           multiply,
