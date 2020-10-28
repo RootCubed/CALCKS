@@ -23,23 +23,23 @@ int bufferCharToFontChar(int bufChar) {
     if (bufChar <= NUM_F) return bufChar;
     switch (bufChar) {
         case OP_PLUS:
-            return 62;
+            return CHAR_PLUS;
         case OP_MINUS:
-            return 63;
+            return CHAR_MINUS;
         case OP_MULT:
-            return 64;
+            return CHAR_MULT;
         case OP_DIV:
-            return 65;
+            return CHAR_DIV;
         case OP_POW:
-            return 73;
+            return CHAR_POW;
         case VAR_X:
             return 59;
         case OP_BRACK_OPEN:
-            return 68;
+            return CHAR_BROPEN;
         case OP_BRACK_CLOSE:
-            return 69;
+            return CHAR_BRCLOSE;
         case NUM_POINT:
-            return 71;
+            return CHAR_POINT;
         default:
             return -1;
     }

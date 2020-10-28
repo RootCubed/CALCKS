@@ -8,6 +8,23 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
+// character set
+#define CHAR_PLUS 62
+#define CHAR_MINUS 63
+#define CHAR_MULT 64
+#define CHAR_DIV 65
+#define CHAR_EQUALS 66
+#define CHAR_POW 73
+#define CHAR_BROPEN 68
+#define CHAR_BRCLOSE 69
+#define CHAR_POINT 71
+#define CHAR_COLON 72
+#define CHAR_PERCENT 74
+#define CHAR_ARROW_UP 75
+#define CHAR_ARROW_DOWN 76
+#define CHAR_ARROW_LEFT 77
+#define CHAR_ARROW_RIGHT 78
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 

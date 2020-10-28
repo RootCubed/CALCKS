@@ -105,37 +105,37 @@ void convert_string(const char *str, char *buf) {
                     buf[i] = -1;
                     break;
                 case '.':
-                    buf[i] = 71;
+                    buf[i] = CHAR_POINT;
                     break;
                 case '+':
-                    buf[i] = 62;
+                    buf[i] = CHAR_PLUS;
                     break;
                 case '-':
-                    buf[i] = 63;
+                    buf[i] = CHAR_MINUS;
                     break;
                 case '*':
-                    buf[i] = 64;
+                    buf[i] = CHAR_MULT;
                     break;
                 case '/':
-                    buf[i] = 65;
+                    buf[i] = CHAR_DIV;
                     break;
                 case '=':
-                    buf[i] = 66;
+                    buf[i] = CHAR_EQUALS;
                     break;
                 case '(':
-                    buf[i] = 68;
+                    buf[i] = CHAR_BROPEN;
                     break;
                 case ')':
-                    buf[i] = 69;
+                    buf[i] = CHAR_BRCLOSE;
                     break;
                 case ':':
-                    buf[i] = 72;
+                    buf[i] = CHAR_COLON;
                     break;
                 case '^':
-                    buf[i] = 73;
+                    buf[i] = CHAR_POW;
                     break;
                 case '%':
-                    buf[i] = 74;
+                    buf[i] = CHAR_PERCENT;
                     break;
             }
         }
