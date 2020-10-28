@@ -2,10 +2,19 @@
 #include "term.h"
 #include "display.h"
 #include "gui.h"
+#include "mathinput.h"
 
 int graph_hasDrawn = 0;
+inputBox *graphInput;
+
+void graph_init() {
+    graphInput = mathinput_initBox(FNT_SM, 30, 5 * fonts[FNT_SM][2], 64 - fonts[FNT_SM][3]);
+}
 
 double map(double value, double i1, double i2, double o1, double o2) {
+    if (isnan(value) || !isfinite(value)) { // NaN or infinity
+        return o1 - 1;
+    }
     double rangeInput = i2 - i1;
     double rangeOutput = o2 - o1;
     return (value - i1) * (rangeOutput / rangeInput) + o1;
@@ -36,9 +45,21 @@ void graph_draw(char* term) {
         }
         graph_hasDrawn = 1;
         term_free(termTree);
+
+        gui_clear_rect(0, 64 - fonts[FNT_SM][3], 128, 64);
+        gui_draw_string("f(x)=", 0, 64 - fonts[FNT_SM][3], FNT_SM, 0);
+        mathinput_clear(graphInput);
     }
 }
 
 void graph_reset_state() {
     graph_hasDrawn = 0;
+}
+
+void graph_buttonPress(int buttonID) {
+    if (buttonID == enter) {
+		graph_hasDrawn = 0;
+        graph_draw(graphInput->buffer);
+	}
+    mathinput_buttonPress(graphInput, buttonID);
 }

@@ -9,6 +9,7 @@ inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
     theBox->posY = y;
     theBox->cursor = 0;
     theBox->buffer = malloc(maxChars * sizeof(char));
+    theBox->buffer[0] = CHAR_END;
     theBox->currWidth = 0;
     return theBox;
 }
@@ -18,9 +19,38 @@ void mathinput_freeBox(inputBox *box) {
     free(box);
 }
 
+int bufferCharToFontChar(int bufChar) {
+    if (bufChar <= NUM_F) return bufChar;
+    switch (bufChar) {
+        case OP_PLUS:
+            return 62;
+        case OP_MINUS:
+            return 63;
+        case OP_MULT:
+            return 64;
+        case OP_DIV:
+            return 65;
+        case OP_POW:
+            return 73;
+        case VAR_X:
+            return 59;
+        case OP_BRACK_OPEN:
+            return 68;
+        case OP_BRACK_CLOSE:
+            return 69;
+        case NUM_POINT:
+            return 71;
+        default:
+            return -1;
+    }
+}
+
 void mathinput_redraw(inputBox *box) {
     int pos = 0;
     while (box->buffer[pos] != CHAR_END && pos < box->maxChars) {
+        int charToDraw = bufferCharToFontChar(box->buffer[pos]);
+        if (charToDraw == -1) break;
+        gui_draw_char(box->posX + pos * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
         pos++;
     }
 }
@@ -31,35 +61,28 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
         return;
 	}
     if (buttonID != enter && box->cursor == -1) mathinput_clear(box);
-    int charToDraw = -1;
     int charToPutInBuffer = -1;
 	if (buttonID <= nine) {
         charToPutInBuffer = buttonID;
-        charToDraw = buttonID;
 	} else if (buttonID <= divide) {
 		charToPutInBuffer = (buttonID - plus) | (OPTYPE_SIMPLE << 5);
-        charToDraw = 62 + (buttonID - plus);
 	}
 	if (buttonID == variable) {
 		charToPutInBuffer = VAR_X;
-        charToDraw = 59; // x
 	}
 	if (buttonID == bracket_open) {
 		charToPutInBuffer = OP_BRACK_OPEN;
-        charToDraw = 68; // (
 	}
 	if (buttonID == bracket_close) {
 		charToPutInBuffer = OP_BRACK_CLOSE;
-        charToDraw = 69; // )
 	}
 	if (buttonID == exponent) {
 		charToPutInBuffer = OP_POW;
-        charToDraw = 73; // ^
 	}
     if (buttonID == point) {
         charToPutInBuffer = NUM_POINT;
-        charToDraw = 71; // .
-    } 
+    }
+    int charToDraw = bufferCharToFontChar(charToPutInBuffer);
     if (charToDraw != -1) {
         box->buffer[box->cursor] = charToPutInBuffer;
         box->buffer[box->cursor + 1] = CHAR_END;
@@ -71,9 +94,13 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
 
 void mathinput_blinkCursor(inputBox *box, int onOff) {
     if (onOff) {
-        gui_draw_rect(box->posX + box->cursor * fonts[box->font][2], box->posY, fonts[box->font][2], fonts[box->font][3], 1);
+        gui_draw_rect(box->posX + box->cursor * fonts[box->font][2], box->posY, fonts[box->font][2] - 1, fonts[box->font][3] - 1, 1);
     } else {
-        gui_clear_rect(box->posX + box->cursor * fonts[box->font][2], box->posY, fonts[box->font][2], fonts[box->font][3]);
+        gui_clear_rect(box->posX + box->cursor * fonts[box->font][2], box->posY, fonts[box->font][2] - 1, fonts[box->font][3] - 1);
+        int charToDraw = bufferCharToFontChar(box->buffer[box->cursor]);
+        if (charToDraw != -1) {
+            gui_draw_char(box->posX + box->cursor * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
+        }
     }
 }
 

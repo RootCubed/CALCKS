@@ -251,8 +251,8 @@ void gui_draw_rect(int x, int y, int width, int height, int isFilled) {
     if (isFilled) {
         int endX = MIN(SCREEN_WIDTH, x + width);
         int endY = MIN(SCREEN_HEIGHT, y + height);
-        for (int cX = x; cX < endX; cX++) {
-            gui_draw_line(cX, y, cX, endY);
+        for (int cX = x + 1; cX < endX; cX++) {
+            gui_draw_line(cX, y + 1, cX, endY - 1);
         }
     }
 }
@@ -268,7 +268,7 @@ void gui_draw_circle(int x, int y, int dia, int isFilled) {
 void gui_clear_rect(int x, int y, int width, int height) {
     int endX = MIN(SCREEN_WIDTH, x + width);
     int endY = MIN(SCREEN_HEIGHT, y + height);
-    for (int cX = x; cX < endX; cX++) {
+    for (int cX = x; cX <= endX; cX++) {
         gui_clear_line(cX, y, cX, endY);
     }
 }

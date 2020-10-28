@@ -1,6 +1,6 @@
 #define F_CPU 8000000L
 
-#define VERSION_STRING "v0.9.0"
+#define VERSION_STRING "v0.9.1"
 
 #include "common/display.h"
 #include "common/buttons.h"
@@ -55,6 +55,7 @@ opNode *termTree;
 char strBuf[64];
 
 inputBox *mainScreenInput;
+int mainInputCursorState = 0;
 int needsClearRes = 0;
 
 int currMode = m_calc;
@@ -75,7 +76,6 @@ int main(void) {
 	disp_initialize();
 	eep_initialize();
 	
-	
 	unsigned char disp_eeprom_buf[1024];
 	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, EEPROM_STARTUP_LEN);
 	gui_draw_image(disp_eeprom_buf);
@@ -87,6 +87,7 @@ int main(void) {
 
 	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
 	solver_init();
+	graph_init();
 
 	#ifndef console
 	// init ADC
@@ -123,6 +124,16 @@ int main(void) {
 					gui_tab_button("Solv", 100);
 				}
 				needsRedraw = 0;
+				if (mainInputCursorState == 0) {
+					mathinput_blinkCursor(mainScreenInput, 1);
+				}
+				if (mainInputCursorState == 64) {
+					mathinput_blinkCursor(mainScreenInput, 0);
+				}
+				if (mainInputCursorState == 127) {
+					mainInputCursorState = -1;
+				}
+				if (mainInputCursorState != -2) mainInputCursorState++;
 				break;
 			case m_mandelbrot:
 				mandel_draw();
@@ -190,6 +201,8 @@ void infoScreen_battery() {
 
 void buttonPressed_calc(int buttonID) {
 	if (needsClearRes && buttonID != enter) {
+		mainInputCursorState = 0;
+		mathinput_blinkCursor(mainScreenInput, 0);
 		gui_clear_rect(0, 16, SCREEN_WIDTH, fonts[FNT_MD][3]);
 		needsClearRes = 0;
 	}
@@ -204,6 +217,7 @@ void buttonPressed_calc(int buttonID) {
 		sprintf(resBuf, "%g", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 		needsClearRes = 1;
+		mainInputCursorState = -2;
 	}
 
 	if (buttonID == f1) {
@@ -261,12 +275,13 @@ void buttonPressed(int buttonID) {
 			buttonPressed_calc(buttonID);
 			break;
 		case m_graph:
+			graph_buttonPress(buttonID);
 		case m_mandelbrot:
 		case m_info:
 			if (buttonID == back) {
 				currMode = m_calc;
-				mathinput_clear(mainScreenInput);
 				disp_clear();
+				mathinput_redraw(mainScreenInput);
 				needsRedraw = 1;
 			}
 			if (buttonID == bracket_open) {
@@ -280,6 +295,7 @@ void buttonPressed(int buttonID) {
 			if (buttonID == back) {
 				currMode = m_calc;
 				disp_clear();
+				mathinput_redraw(mainScreenInput);
 				needsRedraw = 1;
 			}
 			solver_buttonPress(buttonID);
