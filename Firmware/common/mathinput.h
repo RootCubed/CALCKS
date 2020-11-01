@@ -13,7 +13,8 @@ typedef struct {
     int posY;
     char *buffer;
     int cursor;
-    int currWidth;
+    int scroll;
+    int length;
 } inputBox;
 
 inputBox *mathinput_initBox(int, int, int, int);

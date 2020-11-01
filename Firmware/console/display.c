@@ -1,17 +1,23 @@
 #include "../common/display.h"
 #include <stdio.h>
 #include <string.h>
-#include <io.h>
 
-// overridden
+#ifdef _WIN32
+	#include <io.h>
+	#include <fcntl.h>
+#endif
 
 char buffer[128*8];
 int page = 0;
 int xPos = 0;
 
+char stdoutLineBuf[1024*8];
+
 void disp_initialize() {
-	freopen(NULL, "wb", stdout);
-	setbuf(stdout, NULL);
+	#ifdef _WIN32
+	setmode(fileno(stdout), O_BINARY);
+	setvbuf(stdout, stdoutLineBuf, _IOLBF, 1024*8);
+	#endif
 }
 
 void disp_clear() {
@@ -19,20 +25,20 @@ void disp_clear() {
 }
 
 void disp_data(char cmd) {
-	if (xPos < 4 || xPos > 132 || page < 0 || page > 7) return;
-    buffer[page * 128 + xPos - 4] = cmd;
+	if (realX < 0 || realX > 128 || page < 0 || page > 7) return;
+    buffer[page * 128 + realX] = cmd;
 	xPos++;
 }
 
 void disp_update_data(char cmd) {
-    if (xPos < 4 || xPos > 132 || page < 0 || page > 7) return;
-    buffer[page * 128 + xPos - 4] |= cmd;
+    if (realX < 0 || realX > 128 || page < 0 || page > 7) return;
+    buffer[page * 128 + realX] |= cmd;
 	xPos++;
 }
 
 void disp_remove_data(char cmd) {
-    if (xPos < 4 || xPos > 132 || page < 0 || page > 7) return;
-    buffer[page * 128 + xPos - 4] &= cmd;
+    if (realX < 0 || realX > 128 || page < 0 || page > 7) return;
+    buffer[page * 128 + realX] &= cmd;
 	xPos++;
 }
 
@@ -52,10 +58,8 @@ void disp_command(char cmd) {
 
 void disp_print() {
 	fwrite(buffer, 1, 128 * 8, stdout);
-	/*char hex[2];
-	for (int i = 0; i < 128 * 8; i++) {
-		sprintf(hex, "%c", buffer[i]);
-		fputs(hex, stdout);
+	/*for (int i = 0; i < 128 * 8; i++) {
+		printf("%02x", buffer[i]);
 	}*/
-	printf("\n");
+	fflush(stdout);
 }

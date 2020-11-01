@@ -30,6 +30,11 @@
 				scanf("%d", &button);
 				set_button(button);
 			}
+			if (code == 's') {
+				char button;
+				scanf("%d", &button);
+				set_special_button(button);
+			}
 		}
 		return 0;
 	}
@@ -39,6 +44,11 @@
 	#include <avr/sleep.h>
 	#include <avr/interrupt.h>
 #endif
+
+#define BTN_UP 0b00001000
+#define BTN_LEFT 0b00010000
+#define BTN_DOWN 0b01000000
+#define BTN_RIGHT 0b00100000
 
 enum modes {
 	m_calc,
@@ -50,6 +60,7 @@ enum modes {
 
 char resBuf[0x20];
 int lastButton = -1;
+int lastSpecialButtonState = 0xFFFF;
 opNode *termTree;
 
 char strBuf[64];
@@ -100,7 +111,20 @@ int main(void) {
 	#endif
 
 	while (1) {
-		buttons_get_special();
+		char specialButtons = buttons_get_special();
+		if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
+			buttonPressed(up);
+		}
+		if ((lastSpecialButtonState & BTN_DOWN) && !(specialButtons & BTN_DOWN)) {
+			buttonPressed(down);
+		}
+		if ((lastSpecialButtonState & BTN_LEFT) && !(specialButtons & BTN_LEFT)) {
+			buttonPressed(left);
+		}
+		if ((lastSpecialButtonState & BTN_RIGHT) && !(specialButtons & BTN_RIGHT)) {
+			buttonPressed(right);
+		}
+		lastSpecialButtonState = specialButtons;
 		int btnUnmapped = buttons_getPressed();
 		int currButton = -1;
 		if (btnUnmapped > -1) {
@@ -118,13 +142,49 @@ int main(void) {
 		switch (currMode) {
 			case m_calc:
 				if (needsRedraw) {
+					disp_clear();
 					gui_tab_button("Info", 0);
 					gui_tab_button("Graph", 28);
 					gui_tab_button("Mandel", 61);
 					gui_tab_button("Solv", 100);
+					mathinput_redraw(mainScreenInput);
+					// gui test
+					gui_set_pixel(0, 0, 1);
+					gui_set_pixel(1, 0, 1);
+					gui_set_pixel(0, 1, 1);
+					gui_draw_line(1, 1, 4, 4);
+					gui_draw_line(5, 0, 5, 4);
+					gui_draw_rect(0, 5, 2, 3, 0);
+					gui_draw_rect(0, 10, 2, 3, 1);
+					gui_draw_rect(0, 15, 4, 4, 0);
+					gui_draw_rect(0, 20, 4, 4, 1);
+					gui_draw_rect(0, 25, 6, 6, 1);
+					gui_clear_rect(1, 26, 4, 4);
+					gui_draw_rect(0, 34, 20, 6, 1);
+					gui_draw_circle(50, 20, 10, 1);
+					gui_clear_rect(45, 21, 4, 3);
+					gui_draw_char(50, 23, 7, FNT_SM, 1);
+					gui_clear_line(50, 15, 55, 16);
+					gui_draw_circle(80, 20, 10, 0);
+					gui_update_byte(0xAA, 29, 8);
+					gui_update_byte(0xAA, 30, 0);
+					gui_update_byte(0xAA, 31, 1);
+					gui_update_byte(0xAA, 32, 2);
+					gui_update_byte(0xAA, 33, 3);
+					gui_update_byte(0xAA, 34, 4);
+					gui_update_byte(0xAA, 35, 5);
+					gui_update_byte(0xAA, 36, 6);
+					gui_update_byte(0xAA, 37, 7);
+					gui_update_byte(0xAA, 38, 8);
+					gui_draw_char(60, 38, 7, FNT_SM, 0);
+					gui_draw_char(70, 39, 7, FNT_SM, 0);
+					gui_draw_char(80, 40, 7, FNT_SM, 0);
+					gui_draw_char(90, 41, 7, FNT_SM, 0);
+					gui_draw_char(100, 42, 7, FNT_SM, 0);
+					gui_draw_char(110, 30, CHAR_MULT, FNT_MD, 0);
 				}
 				needsRedraw = 0;
-				if (mainInputCursorState == 0) {
+				/*if (mainInputCursorState == 0) {
 					mathinput_blinkCursor(mainScreenInput, 1);
 				}
 				if (mainInputCursorState == 64) {
@@ -133,7 +193,7 @@ int main(void) {
 				if (mainInputCursorState == 127) {
 					mainInputCursorState = -1;
 				}
-				if (mainInputCursorState != -2) mainInputCursorState++;
+				if (mainInputCursorState != -2) mainInputCursorState++;*/
 				break;
 			case m_mandelbrot:
 				mandel_draw();
@@ -169,31 +229,30 @@ void infoScreen_battery() {
 	long adc = (ADCL | (ADCH << 8));
 	double vcc = 1024 / (0.917 * adc) + 0.301 / 0.917; // more or less accurate
 	
-	if (adc != prevAdc || (PINB & 1) == 0) {
-		double percentage;
-		if ((PINB & 1) == 0) { // charge controller PROG
-			if (chargingAnimDelay < 50) {
-				chargingAnimDelay++;
-				goto ifLoopBreak;
-			}
-			percentage = chargingAnim; // make charging animation
-			chargingAnim += 0.2;
-			if (chargingAnim > 1) chargingAnim = 0.2;
-			gui_draw_string("Battery charging ", 2, 2, FNT_SM, 0);
-		} else {
-			chargingAnim = 0.2;
-			percentage = (vcc - 3.2) / (4.2 - 3.2); // interpolate linearly between 3.2 and 4.2
-			sprintf(strBuf, "Battery: %.1fV/%d%%", vcc, (int) (percentage * 100));
-			gui_draw_string(strBuf, 2, 2, FNT_SM, 0);
+	double percentage;
+	if ((PINB & 1) == 0) { // charge controller PROG
+		if (chargingAnimDelay < 50) {
+			chargingAnimDelay++;
+			goto ifLoopBreak;
 		}
-		gui_draw_rect(104, 0, 22, 6, 0);
-		gui_draw_line(127, 2, 127, 4);
-		for (int i = 0; i < (int) (percentage * 22); i++) {
-			gui_draw_line(104 + i, 0, 104 + i, 6);
-		}
-		gui_clear_rect(104 + (int) (percentage * 22), 1, 22 - ((int) (percentage * 22)), 4);
-		chargingAnimDelay = 0;
+		percentage = chargingAnim; // make charging animation
+		chargingAnim += 0.2;
+		if (chargingAnim > 1) chargingAnim = 0.2;
+		gui_draw_string("Battery charging ", 2, 2, FNT_SM, 0);
+	} else {
+		if (adc == prevAdc) goto ifLoopBreak;
+		chargingAnim = 0.2;
+		percentage = (vcc - 3.2) / (4.2 - 3.2); // interpolate linearly between 3.2 and 4.2
+		sprintf(strBuf, "Battery:%.1fV/%3d%%", vcc, (int) (percentage * 100));
+		gui_draw_string(strBuf, 2, 2, FNT_SM, 0);
 	}
+	gui_draw_rect(104, 0, 22, 6, 0);
+	gui_draw_line(127, 2, 127, 4);
+	for (int i = 0; i < (int) (percentage * 22); i++) {
+		gui_draw_line(104 + i, 0, 104 + i, 6);
+	}
+	gui_clear_rect(104 + (int) (percentage * 22), 1, 22 - ((int) (percentage * 22)), 4);
+	chargingAnimDelay = 0;
 	ifLoopBreak:
 	prevAdc = adc;
 	#endif
@@ -284,12 +343,6 @@ void buttonPressed(int buttonID) {
 				mathinput_redraw(mainScreenInput);
 				needsRedraw = 1;
 			}
-			if (buttonID == bracket_open) {
-				disp_clear();
-				gui_draw_string("     Hello      ", 0, 64 - 48, FNT_MD, 0);
-				gui_draw_string("   @Brammyson   ", 0, 64 - 32, FNT_MD, 0);
-				gui_draw_string("   @Kaoskarl    ", 0, 64 - 16, FNT_MD, 0);
-			}
 			break;
 		case m_solve_menu:
 			if (buttonID == back) {
@@ -299,6 +352,14 @@ void buttonPressed(int buttonID) {
 				needsRedraw = 1;
 			}
 			solver_buttonPress(buttonID);
+	}
+	if (currMode == m_info) {
+		if (buttonID == bracket_open) {
+			disp_clear();
+			gui_draw_string("     Hello      ", 0, 64 - 48, FNT_MD, 0);
+			gui_draw_string("   @Brammyson   ", 0, 64 - 32, FNT_MD, 0);
+			gui_draw_string("   @Kaoskarl    ", 0, 64 - 16, FNT_MD, 0);
+		}
 	}
 }
 

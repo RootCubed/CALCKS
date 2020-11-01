@@ -10,7 +10,8 @@ inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
     theBox->cursor = 0;
     theBox->buffer = malloc(maxChars * sizeof(char));
     theBox->buffer[0] = CHAR_END;
-    theBox->currWidth = 0;
+    theBox->length = 0;
+    theBox->scroll = 0;
     return theBox;
 }
 
@@ -46,17 +47,30 @@ int bufferCharToFontChar(int bufChar) {
 }
 
 void mathinput_redraw(inputBox *box) {
-    int pos = 0;
-    while (box->buffer[pos] != CHAR_END && pos < box->maxChars) {
+    gui_clear_rect(box->posX + (box->cursor - box->scroll) * fonts[box->font][2], box->posY, fonts[box->font][2] - 1, fonts[box->font][3] - 1);
+    int pos = box->scroll;
+    int drawPos = 0;
+    if (pos > 0) {
+        gui_draw_char(box->posX, box->posY, CHAR_ARROW_LEFT, box->font, 1);
+        drawPos = 1;
+        pos++;
+    }
+    while (pos < box->length && box->posX + drawPos * fonts[box->font][2] < SCREEN_WIDTH) {
         int charToDraw = bufferCharToFontChar(box->buffer[pos]);
         if (charToDraw == -1) break;
-        gui_draw_char(box->posX + pos * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
+        gui_draw_char(box->posX + drawPos * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
         pos++;
+        drawPos++;
+    }
+    if (box->posX + drawPos * fonts[box->font][2] >= SCREEN_WIDTH) {
+        gui_draw_char(SCREEN_WIDTH - fonts[box->font][2], box->posY, CHAR_ARROW_RIGHT, box->font, 1);
     }
 }
 
 void mathinput_buttonPress(inputBox *box, int buttonID) {
     if (buttonID == enter) {
+        mathinput_blinkCursor(box, 0);
+        box->buffer[box->length] = CHAR_END;
 		box->cursor = -1;
         return;
 	}
@@ -85,29 +99,62 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
     int charToDraw = bufferCharToFontChar(charToPutInBuffer);
     if (charToDraw != -1) {
         box->buffer[box->cursor] = charToPutInBuffer;
-        box->buffer[box->cursor + 1] = CHAR_END;
-        gui_draw_char(box->posX + box->cursor * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
+        if (box->cursor == box->length) {
+            box->length++;
+        }
+        if (box->posX + (box->cursor + 2) * fonts[box->font][2] > SCREEN_WIDTH) {
+            box->scroll++;
+            gui_clear_rect(box->posX, box->posY, box->length * fonts[box->font][2], fonts[box->font][3]);
+            mathinput_redraw(box);
+        } else {
+            gui_draw_char(box->posX + (box->cursor - box->scroll) * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
+        }
         box->cursor++;
-        box->currWidth += fonts[box->font][2];
     }
+
+    if (buttonID == left) {
+        mathinput_blinkCursor(box, 0);
+        if (box->cursor > 0) box->cursor--;
+        if (box->cursor < box->scroll) {
+            box->scroll = box->cursor;
+            mathinput_redraw(box);
+        }
+        mathinput_blinkCursor(box, 1);
+    }
+    
+    if (buttonID == right) {
+        mathinput_blinkCursor(box, 0);
+        if (box->cursor < box->length) box->cursor++;
+        int hadToChangeScroll = 0;
+        while (box->posX + (box->cursor - box->scroll + 1) * fonts[box->font][2] > SCREEN_WIDTH) {
+            box->scroll++;
+            hadToChangeScroll = 1;
+        }
+        if (hadToChangeScroll) {
+            mathinput_redraw(box);
+        }
+        mathinput_blinkCursor(box, 1);
+    }
+
 }
 
 void mathinput_blinkCursor(inputBox *box, int onOff) {
     if (onOff) {
-        gui_draw_rect(box->posX + box->cursor * fonts[box->font][2], box->posY, fonts[box->font][2] - 1, fonts[box->font][3] - 1, 1);
+        gui_draw_rect(box->posX + (box->cursor - box->scroll) * fonts[box->font][2], box->posY, fonts[box->font][2], fonts[box->font][3], 1);
     } else {
-        gui_clear_rect(box->posX + box->cursor * fonts[box->font][2], box->posY, fonts[box->font][2] - 1, fonts[box->font][3] - 1);
+        gui_clear_rect(box->posX + (box->cursor - box->scroll) * fonts[box->font][2], box->posY, fonts[box->font][2], fonts[box->font][3]);
         int charToDraw = bufferCharToFontChar(box->buffer[box->cursor]);
-        if (charToDraw != -1) {
-            gui_draw_char(box->posX + box->cursor * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
+        if (box->cursor < box->length && charToDraw != -1) {
+            gui_draw_char(box->posX + (box->cursor - box->scroll) * fonts[box->font][2], box->posY, charToDraw, box->font, 0);
         }
     }
 }
 
 void mathinput_clear(inputBox *box) {
-    gui_clear_rect(box->posX, box->posY, box->currWidth, fonts[box->font][3]);
+    gui_clear_rect(box->posX, box->posY, box->length * fonts[box->font][2], fonts[box->font][3]);
+    box->scroll = 0;
     box->cursor = 0;
-    box->currWidth = 0;
+    box->length = 0;
     box->buffer[0] = CHAR_END;
 }
 

@@ -5,7 +5,7 @@
 
 #include "../common/display.h"
 
-char buffer[132*8];
+char buffer[128*8];
 int page = 0;
 int xPos = 0;
 
@@ -26,9 +26,8 @@ void disp_initialize() {
 void disp_clear() {
     int page, col;
     for (page = 8; page >= 0; page--) {
-        disp_command(DISP_CMD_PAGE | page); // set page
-        disp_command(DISP_CMD_COL_MSB);
-        disp_command(DISP_CMD_COL_LSB + 4);
+        disp_setPage(page);
+        disp_setXPos(0);
         for (col = 127; col >= 0; col--) {
             disp_data(0x00);
         }
@@ -38,33 +37,33 @@ void disp_clear() {
 void disp_data(char cmd) {
     PORTB |= DISP_A0;
     
-    if (xPos > 132 || page > 7) return;
+    if (realX < 0 || realX > 128 || page < 0 || page > 7) return;
     disp_sendByte(cmd);
 
     // update buffer
-    buffer[page * 128 + xPos] = cmd;
+    buffer[page * 128 + realX] = cmd;
 	xPos++;
 }
 
 void disp_update_data(char cmd) {
     PORTB |= DISP_A0;
 
-    if (xPos > 132 || page > 7) return;
-    disp_sendByte(cmd | buffer[page * 128 + xPos]);
+    if (realX < 0 || realX > 128 || page < 0 || page > 7) return;
+    disp_sendByte(cmd | buffer[page * 128 + realX]);
 
     // update buffer
-    buffer[page * 128 + xPos] |= cmd;
+    buffer[page * 128 + realX] |= cmd;
 	xPos++;
 }
 
 void disp_remove_data(char cmd) {
     PORTB |= DISP_A0;
 
-    if (xPos > 132 || page > 7) return;
-    disp_sendByte(cmd & buffer[page * 128 + xPos]);
+    if (realX < 0 || realX > 128 || page < 0 || page > 7) return;
+    disp_sendByte(cmd & buffer[page * 128 + realX]);
 
     // update buffer
-    buffer[page * 128 + xPos] &= cmd;
+    buffer[page * 128 + realX] &= cmd;
 	xPos++;
 }
 

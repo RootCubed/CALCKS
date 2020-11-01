@@ -34,7 +34,8 @@ typedef enum buttons {
     variable,
     bracket_open, bracket_close,
     exponent,
-    point
+    point,
+    up, down, left, right
 } buttons;
 
 
@@ -43,6 +44,7 @@ char buttons_get_special();
 int buttons_getPressed();
 #ifdef console
     void set_button(char);
+    void set_special_button(char);
 #endif
 
 #endif /* BUTTONS_H_ */

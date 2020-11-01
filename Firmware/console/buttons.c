@@ -13,6 +13,7 @@ const char BUTTON_MAP[35] = {
 };
 
 char buttonBuffer = -1;
+int specialButtonBuffer = 0xFFFF;
 
 void buttons_initialize() {}
 
@@ -20,8 +21,14 @@ void set_button(char btn) {
     buttonBuffer = btn;
 }
 
+void set_special_button(char btn) {
+    specialButtonBuffer = 0xFFFF & ~btn;
+}
+
 char buttons_get_special() {
-    return 0;
+    char specialButtons = specialButtonBuffer;
+    specialButtonBuffer = 0xFFFF;
+    return specialButtons;
 }
 
 int buttons_getPressed() {

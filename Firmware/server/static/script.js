@@ -26,18 +26,22 @@ socket.on("crash", data => {
 });
 
 const charTable = {
-    48: 0,
-    49: 1,
-    50: 2,
-    51: 3,
-    52: 4,
-    53: 5,
-    54: 6,
-    55: 7,
-    56: 8,
-    57: 9,
+    13: 4,
+    46: 3,
+    48: 2,
+    49: 6,
+    50: 7,
+    51: 8,
+    52: 11,
+    53: 12,
+    54: 13,
+    55: 16,
+    56: 17,
+    57: 18,
 };
 
 document.addEventListener("keypress", ev => {
-    socket.emit("button", charTable[ev.charCode]);
+    if (charTable[ev.charCode]) {
+        socket.emit("button", charTable[ev.charCode]);
+    }
 });

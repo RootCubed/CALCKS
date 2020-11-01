@@ -7,6 +7,7 @@
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
+#define PIXEL_W_H_RATIO 0.85714
 
 // character set
 #define CHAR_PLUS 62
@@ -22,8 +23,8 @@
 #define CHAR_PERCENT 74
 #define CHAR_ARROW_UP 75
 #define CHAR_ARROW_DOWN 76
-#define CHAR_ARROW_LEFT 77
-#define CHAR_ARROW_RIGHT 78
+#define CHAR_ARROW_RIGHT 77
+#define CHAR_ARROW_LEFT 78
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

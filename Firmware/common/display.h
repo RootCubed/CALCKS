@@ -43,8 +43,13 @@ void disp_update_data(char);
 void disp_remove_data(char);
 
 #define disp_setPage(page) disp_command(DISP_CMD_PAGE | page);
-#define disp_setMSBCol(val) disp_command(DISP_CMD_COL_MSB | val);
-#define disp_setLSBCol(val) disp_command(DISP_CMD_COL_LSB | val);
+#define disp_setMSBCol(val) disp_command(DISP_CMD_COL_MSB | (val));
+#define disp_setLSBCol(val) disp_command(DISP_CMD_COL_LSB | (val));
+#define disp_setXPos(val) disp_setMSBCol((val + 4) >> 4 & 0xF); disp_setLSBCol((val + 4) & 0xF)
+
+// In the 6 o'clock orientation, the display column address is offset by 4.
+// Therefore, we have to subtract 4 from the xPos when drawing to the buffer.
+#define realX (xPos - 4)
 
 void disp_sendByte(char);
 

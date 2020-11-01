@@ -8,60 +8,54 @@ const int fonts[2][4] = {
 
 void gui_draw_byte(char bt, int x, int y) {
     if (x < 0 || x > 128 || y < 0 || y > 64) return;
-    x += 4;
 
     int offset = y % 8;
 
     disp_setPage(y / 8);
-    disp_setMSBCol((x >> 4 & 0xF));
-    disp_setLSBCol((x      & 0xF));
+    disp_setXPos(x);
     disp_data((bt << offset) & 0xFF);
     if (offset != 0) {
         disp_setPage(y / 8 + 1);
-        disp_setMSBCol((x >> 4 & 0xF));
-        disp_setLSBCol((x      & 0xF));
-        disp_data(((short) bt & 0x00FF) >> (8 - offset));
+        disp_setXPos(x);
+        unsigned short btUS = bt;
+        btUS = btUS & 0x00FF;
+        unsigned char res = (char) (btUS >> (8 - offset));
+        res &= 0xFF;
+        disp_data(0x0A);
     }
 }
 
 void gui_update_byte(char bt, int x, int y) {
     if (x < 0 || x > 128 || y < 0 || y > 64) return;
-    x += 4;
 
     int offset = y % 8;
 
     disp_setPage(y / 8);
-    disp_setMSBCol((x >> 4 & 0xF));
-    disp_setLSBCol((x      & 0xF));
+    disp_setXPos(x);
     disp_update_data((bt << offset) & 0xFF);
     if (y % 8 != 0) {
         disp_setPage(y / 8 + 1);
-        disp_setMSBCol((x >> 4 & 0xF));
-        disp_setLSBCol((x      & 0xF));
+        disp_setXPos(x);
         disp_update_data(((short) bt & 0x00FF) >> (8 - offset));
     }
 }
 
 void gui_remove_byte(char bt, int x, int y) {
     if (x < 0 || x > 128 || y < 0 || y > 64) return;
-    x += 4;
 
     int offset = y % 8;
 
     disp_setPage(y / 8);
-    disp_setMSBCol((x >> 4 & 0xF));
-    disp_setLSBCol((x      & 0xF));
+    disp_setXPos(x);
     disp_remove_data((bt << offset) & 0xFF | ~((0xFF << offset) & 0xFF));
     if (y % 8 != 0) {
         disp_setPage(y / 8 + 1);
-        disp_setMSBCol((x >> 4 & 0xF));
-        disp_setLSBCol((x      & 0xF));
+        disp_setXPos(x);
         disp_remove_data(((0xFF00 | bt) >> (8 - offset)) & 0xFF);
     }
 }
 
 void gui_draw_char(int xPos, int yPos, int num, int font, int isInverted) {
-    xPos += 4;
 	int fontWidth = fonts[font][2];
 	int fontByteWidth = 1;
 	int fontHeight = fonts[font][3];
@@ -70,18 +64,16 @@ void gui_draw_char(int xPos, int yPos, int num, int font, int isInverted) {
 	int yEnd = yPos + fontHeight;
 	int yStart = yPos;
 	while (yPos < yEnd) {
-		disp_setPage(yPos / 8);
-		disp_setMSBCol((xPos >> 4 & 0xF));
-		disp_setLSBCol((xPos      & 0xF));
-		for (int col = 1; col <= fontWidth; col++) {
+		for (int col = 0; col < fontWidth; col++) {
 			char colBuf = 0;
 			for (int i = 0; i < (((yEnd - yPos) < 8) ? (yEnd - yPos) : 8); i++) {
-				int shift = fontWidth - col;
+				int shift = fontWidth - col - 1;
                 char character = (tmp_chr[yPos - yStart + i]);
                 colBuf += ((character >> shift) & 1) << i;
 			}
             if (isInverted) colBuf = ~colBuf;
-			disp_data(colBuf);
+            gui_remove_byte(colBuf, xPos + col, yPos);
+			gui_update_byte(colBuf, xPos + col, yPos);
 		}
 		yPos += 8;
 	}
@@ -162,8 +154,7 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
 void gui_draw_image(char buffer[1024]) {
     for (int page = 7; page >= 0; page--) {
         disp_setPage(page);
-        disp_setMSBCol(0);
-        disp_setLSBCol(4);
+        disp_setXPos(0);
         for (int x = 0; x < 128; x++) {
             char column = 0;
             for (int y = 8; y >= 0; y--) {
@@ -238,12 +229,14 @@ void gui_clear_line(int x1, int y1, int x2, int y2) {
     }
     double q = (double) diffY / diffX;
     for (int cX = x1; cX <= x2; cX++) {
-        gui_remove_byte(0xFE, cX, y1 + ceil(q * (cX - x1)));
+        gui_remove_byte(0xFE, cX, y1 + round(q * (cX - x1)));
     }
 }
 
 void gui_draw_rect(int x, int y, int width, int height, int isFilled) {
-    if (width < 0 || height < 0 || x < 0 || y < 0) return;
+    if (width < 1 || height < 1 || x < 0 || y < 0) return;
+    width -= 1;
+    height -= 1;
     gui_draw_line(x, y, x, y + height);
     gui_draw_line(x, y, x + width, y);
     gui_draw_line(x, y + height, x + width, y + height);
@@ -252,20 +245,61 @@ void gui_draw_rect(int x, int y, int width, int height, int isFilled) {
         int endX = MIN(SCREEN_WIDTH, x + width);
         int endY = MIN(SCREEN_HEIGHT, y + height);
         for (int cX = x + 1; cX < endX; cX++) {
-            gui_draw_line(cX, y + 1, cX, endY - 1);
+            gui_draw_line(cX, y + 1, cX, endY);
         }
     }
 }
 
-void gui_draw_circle(int x, int y, int dia, int isFilled) {
-    if (dia < 0 || x < 0 || y < 0) return;
-    for (int i = 0; i < 360; i++) {
-        double rads = i * 3.1415926/180;
-        gui_update_byte(0x01, round(dia * sin(rads)) + x, round(dia * cos(rads) * 0.85714) + y);
+// circle drawing algorithm from https://web.engr.oregonstate.edu/~sllu/bcircle.pdf
+
+void plot8CirclePoints(int centerX, int centerY, int x, int y) {
+    gui_set_pixel(centerX + x, centerY + y * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX - x, centerY + y * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX - x, centerY - y * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX + x, centerY - y * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX + y, centerY + x * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX - y, centerY + x * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX - y, centerY - x * PIXEL_W_H_RATIO, 1);
+    gui_set_pixel(centerX + y, centerY - x * PIXEL_W_H_RATIO, 1);
+}
+
+void plot8CircleMidLines(int centerX, int centerY, int x, int y) {
+    gui_draw_line(centerX, centerY, centerX + x, centerY + y * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX - x, centerY + y * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX - x, centerY - y * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX + x, centerY - y * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX + y, centerY + x * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX - y, centerY + x * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX - y, centerY - x * PIXEL_W_H_RATIO);
+    gui_draw_line(centerX, centerY, centerX + y, centerY - x * PIXEL_W_H_RATIO);
+}
+
+void gui_draw_circle(int x, int y, int radius, int isFilled) {
+    if (radius < 1 || x < 0 || y < 0) return;
+    int xChange = 1 - 2 * radius;
+    int yChange = 1;
+    int currX = radius;
+    int currY = 0;
+    int radiusError = 0;
+    while (currX >= currY) {
+        plot8CirclePoints(x, y, currX, currY);
+        if (isFilled) {
+            plot8CircleMidLines(x, y, currX, currY);
+        }
+        currY++;
+        radiusError += yChange;
+        yChange += 2;
+        if (2 * radiusError + xChange > 0) {
+            currX--;
+            radiusError += xChange;
+            xChange += 2;
+        }
     }
 }
 
 void gui_clear_rect(int x, int y, int width, int height) {
+    width -= 1;
+    height -= 1;
     int endX = MIN(SCREEN_WIDTH, x + width);
     int endY = MIN(SCREEN_HEIGHT, y + height);
     for (int cX = x; cX <= endX; cX++) {
@@ -275,7 +309,7 @@ void gui_clear_rect(int x, int y, int width, int height) {
 
 int gui_tab_button(const char *tabName, int xPos) {
     gui_draw_byte(0b11111110, xPos, 56);
-    int length = gui_draw_string(tabName, xPos + 1, 57, FNT_SM, 1);
+    int length = gui_draw_string(tabName, xPos + 1, 56, FNT_SM, 1);
     gui_draw_byte(0b11111110, xPos + 1 + length, 56);
     return length + 2;
 }

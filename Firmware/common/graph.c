@@ -57,9 +57,10 @@ void graph_reset_state() {
 }
 
 void graph_buttonPress(int buttonID) {
+    mathinput_buttonPress(graphInput, buttonID);
+    
     if (buttonID == enter) {
 		graph_hasDrawn = 0;
         graph_draw(graphInput->buffer);
 	}
-    mathinput_buttonPress(graphInput, buttonID);
 }

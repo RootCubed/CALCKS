@@ -74,6 +74,20 @@
                 </tr>
             </tbody>
         </table>
+        <table id="buttons_arrows">
+            <tbody>
+                <tr>
+                    <td><button onclick='socket.emit("specialbutton", 0b00001000);'>🡑</button></td>
+                </tr>
+                <tr>
+                    <td><button onclick='socket.emit("specialbutton", 0b00010000);'>🡐</button></td>
+                    <td><button onclick='socket.emit("specialbutton", 0b00100000);'>🡒</button></td>
+                </tr>
+                <tr>
+                    <td><button onclick='socket.emit("specialbutton", 0b01000000);'>🡓</button></td>
+                </tr>
+            </tbody>
+        </table>
         <table id="buttons">
             <tbody>
                 <tr>

@@ -13,8 +13,7 @@ io.on("connection", socket => {
     let userCalc = runningCalcs[socket.id][0];
     let userCalcBuf = runningCalcs[socket.id][1];
     userCalc.stdout.on("data", data => {
-        userCalcBuf = Buffer.from(data);
-        socket.emit("screen", userCalcBuf);
+        socket.emit("screen", data);
     });
     
     userCalc.stderr.on("data", data => {
@@ -42,7 +41,15 @@ io.on("connection", socket => {
             console.log("button", socket, "was pressed!");
             userCalc.stdin.write('b');
             userCalc.stdin.write(socket.toString());
-            //setTimeout(() => userCalc.stdin.write('g'), 50);
+        }
+    });
+
+    
+    socket.on("specialbutton", socket => {
+        if (socket != undefined) {
+            console.log("specialbutton", socket, "was pressed!");
+            userCalc.stdin.write('s');
+            userCalc.stdin.write(socket.toString());
         }
     });
 });
