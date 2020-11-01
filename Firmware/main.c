@@ -66,7 +66,6 @@ opNode *termTree;
 char strBuf[64];
 
 inputBox *mainScreenInput;
-int mainInputCursorState = 0;
 int needsClearRes = 0;
 
 int currMode = m_calc;
@@ -97,6 +96,7 @@ int main(void) {
 	buttons_initialize();
 
 	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
+	mathinput_setCursor(mainScreenInput, CURSOR_ON);
 	solver_init();
 	graph_init();
 
@@ -184,16 +184,7 @@ int main(void) {
 					gui_draw_char(110, 30, CHAR_MULT, FNT_MD, 0);*/
 				}
 				needsRedraw = 0;
-				if (mainInputCursorState == 0) {
-					mathinput_blinkCursor(mainScreenInput, 1);
-				}
-				if (mainInputCursorState == 64) {
-					mathinput_blinkCursor(mainScreenInput, 0);
-				}
-				if (mainInputCursorState == 127) {
-					mainInputCursorState = -1;
-				}
-				if (mainInputCursorState != -2) mainInputCursorState++;
+				mathinput_cursorFrame(mainScreenInput);
 				break;
 			case m_mandelbrot:
 				mandel_draw();
@@ -260,8 +251,6 @@ void infoScreen_battery() {
 
 void buttonPressed_calc(int buttonID) {
 	if (needsClearRes && buttonID != enter) {
-		mainInputCursorState = 0;
-		mathinput_blinkCursor(mainScreenInput, 0);
 		gui_clear_rect(0, 16, SCREEN_WIDTH, fonts[FNT_MD][3]);
 		needsClearRes = 0;
 	}
@@ -276,7 +265,7 @@ void buttonPressed_calc(int buttonID) {
 		sprintf(resBuf, "%g", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 		needsClearRes = 1;
-		mainInputCursorState = -2;
+		mathinput_setCursor(mainScreenInput, CURSOR_HIDDEN);
 	}
 
 	if (buttonID == f1) {

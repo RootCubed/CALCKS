@@ -16,7 +16,7 @@ void solver_init();
 
 void solver_free();
 
-int solver_updateScreen();
+void solver_updateScreen();
 
 void solver_buttonPress(int);
 

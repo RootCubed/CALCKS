@@ -50,6 +50,7 @@ void graph_draw(char* term) {
         gui_draw_string("f(x)=", 0, 64 - fonts[FNT_SM][3], FNT_SM, 0);
         mathinput_clear(graphInput);
     }
+    mathinput_cursorFrame(graphInput);
 }
 
 void graph_reset_state() {

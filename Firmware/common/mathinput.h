@@ -6,6 +6,10 @@
 #include "buttons.h"
 #include <stdlib.h>
 
+#define CURSOR_ON 0
+#define CURSOR_OFF 1
+#define CURSOR_HIDDEN 2
+
 typedef struct {
     int font;
     int maxChars;
@@ -15,6 +19,8 @@ typedef struct {
     int cursor;
     int scroll;
     int length;
+    int cursorBlinkState;
+    int cursorFrameCount;
 } inputBox;
 
 inputBox *mathinput_initBox(int, int, int, int);
@@ -25,7 +31,8 @@ void mathinput_redraw(inputBox *);
 
 void mathinput_buttonPress(inputBox *, int);
 
-void mathinput_blinkCursor(inputBox *, int);
+void mathinput_cursorFrame(inputBox *);
+void mathinput_setCursor(inputBox *, int);
 
 void mathinput_clear(inputBox *);
 
