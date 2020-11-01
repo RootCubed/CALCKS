@@ -159,7 +159,10 @@ void mathinput_cursorFrame(inputBox *box) {
 void mathinput_setCursor(inputBox *box, int onOff) {
     box->cursorBlinkState = onOff;
     box->cursorFrameCount = 0;
-    if (box->cursor == -1) return;
+    if (box->cursor == -1) {
+        if (box->cursorBlinkState == CURSOR_HIDDEN) return;
+        box->cursor = 0;
+    };
     int fontWidth = fonts[box->font][2];
     int fontHeight = fonts[box->font][3];
     if (onOff == CURSOR_ON) {
