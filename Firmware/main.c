@@ -1,6 +1,6 @@
 #define F_CPU 8000000L
 
-#define VERSION_STRING "v0.9.1"
+#define VERSION_STRING "v0.9.2"
 
 #include "common/display.h"
 #include "common/buttons.h"
@@ -143,7 +143,7 @@ int main(void) {
 			case m_calc:
 				if (needsRedraw) {
 					disp_clear();
-					gui_tab_button("Info", 0);
+					/*gui_tab_button("Info", 0);
 					gui_tab_button("Graph", 28);
 					gui_tab_button("Mandel", 61);
 					gui_tab_button("Solv", 100);
@@ -181,10 +181,10 @@ int main(void) {
 					gui_draw_char(80, 40, 7, FNT_SM, 0);
 					gui_draw_char(90, 41, 7, FNT_SM, 0);
 					gui_draw_char(100, 42, 7, FNT_SM, 0);
-					gui_draw_char(110, 30, CHAR_MULT, FNT_MD, 0);
+					gui_draw_char(110, 30, CHAR_MULT, FNT_MD, 0);*/
 				}
 				needsRedraw = 0;
-				/*if (mainInputCursorState == 0) {
+				if (mainInputCursorState == 0) {
 					mathinput_blinkCursor(mainScreenInput, 1);
 				}
 				if (mainInputCursorState == 64) {
@@ -193,7 +193,7 @@ int main(void) {
 				if (mainInputCursorState == 127) {
 					mainInputCursorState = -1;
 				}
-				if (mainInputCursorState != -2) mainInputCursorState++;*/
+				if (mainInputCursorState != -2) mainInputCursorState++;
 				break;
 			case m_mandelbrot:
 				mandel_draw();
