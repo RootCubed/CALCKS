@@ -78,6 +78,15 @@ int chargingAnimDelay = 50;
 void buttonPressed(int);
 void infoScreen_battery();
 
+#ifndef console
+// https://jeelabs.org/2011/05/22/atmega-memory-use/
+int freeRam() {
+	extern int __heap_start, *__brkval; 
+	int v; 
+	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+#endif
+
 int main(void) {
 	#ifdef console
 		CreateThread(NULL, 0, ConsoleListener, NULL, 0, NULL);
@@ -205,6 +214,12 @@ int main(void) {
 					gui_draw_string("(c) Liam Braun 2020", 5, 64 - 8, FNT_SM, 0);
 					needsRedraw = 0;
 				}
+				#ifndef console
+				sprintf(strBuf, "RAM Usage:");
+				gui_draw_string(strBuf, 0, 12, FNT_SM, 0);
+				sprintf(strBuf, "%d/16384 B", 16384 - freeRam());
+				gui_draw_string(strBuf, 0, 20, FNT_SM, 0);
+				#endif
 				infoScreen_battery();
 		}
 
