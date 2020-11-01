@@ -246,12 +246,12 @@ void infoScreen_battery() {
 		sprintf(strBuf, "Battery:%.1fV/%3d%%", vcc, (int) (percentage * 100));
 		gui_draw_string(strBuf, 2, 2, FNT_SM, 0);
 	}
-	gui_draw_rect(104, 0, 22, 6, 0);
-	gui_draw_line(127, 2, 127, 4);
+	gui_draw_rect(104, 2, 23, 6, 0);
+	gui_draw_line(127, 3, 127, 6);
 	for (int i = 0; i < (int) (percentage * 22); i++) {
-		gui_draw_line(104 + i, 0, 104 + i, 6);
+		gui_draw_line(104 + i, 3, 104 + i, 6);
 	}
-	gui_clear_rect(104 + (int) (percentage * 22), 1, 22 - ((int) (percentage * 22)), 4);
+	gui_clear_rect(104 + (int) (percentage * 22), 3, 22 - ((int) (percentage * 22)), 4);
 	chargingAnimDelay = 0;
 	ifLoopBreak:
 	prevAdc = adc;
