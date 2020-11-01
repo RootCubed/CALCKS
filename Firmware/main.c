@@ -143,13 +143,13 @@ int main(void) {
 			case m_calc:
 				if (needsRedraw) {
 					disp_clear();
-					/*gui_tab_button("Info", 0);
+					gui_tab_button("Info", 0);
 					gui_tab_button("Graph", 28);
 					gui_tab_button("Mandel", 61);
 					gui_tab_button("Solv", 100);
 					mathinput_redraw(mainScreenInput);
 					// gui test
-					gui_set_pixel(0, 0, 1);
+					/*gui_set_pixel(0, 0, 1);
 					gui_set_pixel(1, 0, 1);
 					gui_set_pixel(0, 1, 1);
 					gui_draw_line(1, 1, 4, 4);
