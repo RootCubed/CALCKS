@@ -1,7 +1,12 @@
 OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
 
-SHELL=cmd
+PORT=/dev/ttyACM0
+
+ifeq ($(OS), Windows)
+	SHELL=cmd
+	PORT=COM3
+endif
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
 common-files = common/*.h
@@ -39,10 +44,10 @@ server/eepromdata.bin: eepromgen/*.png
 	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
 
 eeprom: server/eepromdata.bin
-	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 57600 -U eeprom:w:"server/eepromdata.bin":r
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r
 
 upload: avr
-	$(AVRDUDE) -v -p atmega1284 -c arduino -P COM3 -b 57600 -U flash:w:"main.hex":i
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i
 
 clean:
 	rm *.o
