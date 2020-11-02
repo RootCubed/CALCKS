@@ -80,6 +80,7 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
         return;
 	}
     if (buttonID != enter && box->cursor == -1) mathinput_clear(box);
+
     unsigned char charToPutInBuffer = -1;
 	if (buttonID <= nine) {
         charToPutInBuffer = buttonID;
@@ -144,20 +145,24 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
         }
     }
 
-    if (buttonID == del) {
-        if (box->cursor == box->length) { // after last character
-        box->length--;
-            mathinput_setCursor(box, CURSOR_OFF);
-            box->cursor--;
+    if (buttonID == del && box->cursor > -1) {
+        if (box->length == 0) {
             mathinput_setCursor(box, CURSOR_ON);
         } else {
-            int i = box->cursor;
-            box->length--;
-            while (i < box->length) {
-                box->buffer[i] = box->buffer[i + 1];
-                i++;
+            if (box->cursor == box->length) { // after last character
+                box->length--;
+                mathinput_setCursor(box, CURSOR_OFF);
+                box->cursor--;
+                mathinput_setCursor(box, CURSOR_ON);
+            } else {
+                int i = box->cursor;
+                box->length--;
+                while (i < box->length) {
+                    box->buffer[i] = box->buffer[i + 1];
+                    i++;
+                }
+                mathinput_redraw(box);
             }
-            mathinput_redraw(box);
         }
     }
 
