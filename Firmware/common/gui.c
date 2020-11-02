@@ -62,16 +62,24 @@ void gui_draw_char(int xPos, int yPos, int num, int font, int isInverted) {
 	char tmp_chr[256];
 	eep_read_block(&tmp_chr, fonts[font][0] + num * fontByteWidth * fontHeight, fontByteWidth * fontHeight);
 	int yEnd = yPos + fontHeight;
+    if (isInverted) yEnd++; // bigger padding
 	int yStart = yPos;
 	while (yPos < yEnd) {
 		for (int col = 0; col < fontWidth; col++) {
 			char colBuf = 0;
-			for (int i = 0; i < (((yEnd - yPos) < 8) ? (yEnd - yPos) : 8); i++) {
+            int endI = (((yEnd - yPos) < 8) ? (yEnd - yPos) : 8);
+			for (int i = 0; i < endI; i++) {
 				int shift = fontWidth - col - 1;
                 char character = (tmp_chr[yPos - yStart + i]);
-                colBuf += ((character >> shift) & 1) << i;
+                char bitToAdd = ((character >> shift) & 1);
+                if (isInverted && yPos + 8 >= yEnd && i + 1 == endI) { // make sure last row is 0
+                    bitToAdd = 0;
+                }
+                if (isInverted) {
+                    bitToAdd ^= 1;
+                }
+                colBuf += bitToAdd << i;
 			}
-            if (isInverted) colBuf = ~colBuf;
             gui_remove_byte(colBuf, xPos + col, yPos);
 			gui_update_byte(colBuf, xPos + col, yPos);
 		}

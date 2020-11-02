@@ -7,9 +7,9 @@ int solver_needsRedraw = 1;
 int blinkCounter = 0;
 
 void solver_init() {
-    solver_s.a = mathinput_initBox(FNT_SM, 40, 13, 11);
-    solver_s.b = mathinput_initBox(FNT_SM, 40, 13, 21);
-    solver_s.c = mathinput_initBox(FNT_SM, 40, 13, 31);
+    solver_s.a = mathinput_initBox(FNT_SM, 40, 13, 10);
+    solver_s.b = mathinput_initBox(FNT_SM, 40, 13, 20);
+    solver_s.c = mathinput_initBox(FNT_SM, 40, 13, 30);
     solver_s.currentSelected = 0;
     solver_s.solveType = SOLV_LINEAR;
 }
@@ -37,6 +37,7 @@ void solver_redrawScreenLinear() {
         solver_solveLinear();
         sprintf(resBuf, "x=%g", solver_s.x1);
         gui_draw_string(resBuf, 0, 26, FNT_MD, 0);
+        gui_draw_char(SCREEN_WIDTH / 2 - 3, 0, CHAR_ARROW_UP, FNT_SM, 0);
     } else {
         gui_draw_string("mx+q=0", SCREEN_WIDTH / 2 - 3 * fonts[FNT_SM][2], 0, FNT_SM, (solver_s.currentSelected == -1));
         gui_draw_char(SCREEN_WIDTH - fonts[FNT_SM][2], 0, CHAR_ARROW_RIGHT, FNT_SM, 0);
@@ -99,6 +100,7 @@ void solver_redrawScreenQuadratic() {
             sprintf(resBuf, "x2=%g", solver_s.x2);
             gui_draw_string(resBuf, 0, 37, FNT_MD, 0);
         }
+        gui_draw_char(SCREEN_WIDTH / 2 - 3, 0, CHAR_ARROW_UP, FNT_SM, 0);
     } else {
         gui_draw_string("ax^2+bx+c=0", SCREEN_WIDTH / 2 - 6 * fonts[FNT_SM][2], 0, FNT_SM, (solver_s.currentSelected == -1));
         gui_draw_char(0, 0, CHAR_ARROW_LEFT, FNT_SM, 0);
