@@ -12,7 +12,7 @@ const u8 PRECEDENCE[] = {
     3,    // power
 };
 
-//u8 input[] = {OP_BRACK_OPEN, NUM_4, OP_DIV, NUM_2, OP_PLUS, NUM_3, NUM_8, OP_BRACK_CLOSE, OP_MULT, NUM_2, CHAR_END};
+//u8 input[] = {NUM_4, OP_PLUS, NUM_4, OP_BRACK_CLOSE, OP_DIV, NUM_2, CHAR_END};
 
 opNode* node_stack_pop(opStack* stack) {
     opStackNode* top = stack->top;
@@ -87,7 +87,7 @@ void print_node(opNode* n) {
     }
     printf("%s(", opNameBuf);
     if (n->op1Type == OPNODE_CONST) {
-        printf("%ld, ", n->val1);
+        printf("%g, ", n->val1);
     } else if (n->op1Type == OPNODE_VAR) {
         printf("var%d, ", n->varField1);
     } else {
@@ -95,7 +95,7 @@ void print_node(opNode* n) {
         printf(", ");
     }
     if (n->op2Type == OPNODE_CONST) {
-        printf("%ld", n->val2);
+        printf("%g", n->val2);
     } else if (n->op2Type == OPNODE_VAR) {
         printf("var%d", n->varField2);
     } else {
@@ -218,6 +218,26 @@ opNode* parse_term(u8* input) {
                 if (f.value == (OP_BRACK_CLOSE & 0b11111)) {
                     opStackNode* currOpInStack = stack.top;
                     //printf("current type is %d\n", currValType);
+                    if (currOpInStack->ptr->operation == (OP_BRACK_OPEN & 0b11111)) {
+                        node_stack_remove(&stack, currOpInStack);
+                        opNode *dummyOp = (opNode *) malloc(sizeof(opNode));
+                        dummyOp->operation = OP_PLUS & 0b11111;
+                        if (currValType == VALTYPE_NUMBER) {
+                            dummyOp->op1Type = OPNODE_CONST;
+                            dummyOp->val1 = currNum;
+                        } else if (currValType == VALTYPE_VAR) {
+                            dummyOp->op1Type = OPNODE_VAR;
+                            dummyOp->val1 = currVar;
+                        } else if (currValType == VALTYPE_OP) {
+                            dummyOp->op1Type = OPNODE_OP;
+                            dummyOp->op1 = currValOp;
+                        }
+                        dummyOp->op2Type = OPNODE_CONST;
+                        dummyOp->val2 = 0;
+                        currValOp = dummyOp;
+                        currValType = VALTYPE_OP;
+                        break;
+                    }
                     if (currValType == VALTYPE_NUMBER) {
                         currOpInStack->ptr->val2 = currNum;
                         currOpInStack->ptr->op2Type = OPNODE_CONST;
@@ -285,7 +305,7 @@ opNode* parse_term(u8* input) {
     }
     if (currOp == NULL) {
         currOp = (opNode *) malloc(sizeof(opNode));
-        currOp->operation = 0; // plus
+        currOp->operation = OP_PLUS & 0b11111;
         if (currValType == VALTYPE_NUMBER) {
             currOp->op1Type = OPNODE_CONST;
             currOp->val1 = currNum;
@@ -324,9 +344,6 @@ opNode* parse_term(u8* input) {
         poppedNode->op2Type = OPNODE_OP;
         currOp = poppedNode;
     }
-    /*printf("Traversing nodes:\n");
-    print_node(currOp);
-    printf("\n");*/
     return currOp;
 }
 
@@ -428,6 +445,9 @@ void print_char_console(u8 input) {
     }
     printf("\n");
     opNode* term = parse_term(input);
+    printf("Traversing nodes:\n");
+    print_node(term);
+    printf("\n");
     printf("res = %f\n", evaluate_term(term, 0.3));
     term_free(term);
 }*/
