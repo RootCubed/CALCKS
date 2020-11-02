@@ -105,7 +105,6 @@ int main(void) {
 	buttons_initialize();
 
 	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
-	mathinput_setCursor(mainScreenInput, CURSOR_ON);
 	solver_init();
 	graph_init();
 
@@ -157,6 +156,7 @@ int main(void) {
 					gui_tab_button("Mandel", 61);
 					gui_tab_button("Solv", 100);
 					mathinput_redraw(mainScreenInput);
+					mathinput_setCursor(mainScreenInput, CURSOR_ON);
 					// gui test
 					/*gui_set_pixel(0, 0, 1);
 					gui_set_pixel(1, 0, 1);

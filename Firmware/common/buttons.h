@@ -35,7 +35,8 @@ typedef enum buttons {
     bracket_open, bracket_close,
     exponent,
     point,
-    up, down, left, right
+    up, down, left, right,
+    del
 } buttons;
 
 

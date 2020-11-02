@@ -22,7 +22,7 @@ void mathinput_freeBox(inputBox *box) {
     free(box);
 }
 
-int bufferCharToFontChar(int bufChar) {
+int bufferCharToFontChar(unsigned char bufChar) {
     if (bufChar <= NUM_F) return bufChar;
     switch (bufChar) {
         case OP_PLUS:
@@ -49,8 +49,9 @@ int bufferCharToFontChar(int bufChar) {
 }
 
 void mathinput_redraw(inputBox *box) {
-    int posOffset = MIN(SCREEN_WIDTH - box->posX, (box->length - box->scroll) * fonts[box->font][2]);
-    gui_clear_rect(box->posX, box->posY, posOffset, fonts[box->font][3]);
+    // Commented out so that the extra character gets cleared when a character somewhere else gets deleted
+    //int posOffset = MIN(SCREEN_WIDTH - box->posX, (box->length - box->scroll) * fonts[box->font][2]);
+    gui_clear_rect(box->posX, box->posY, SCREEN_WIDTH - box->posX, fonts[box->font][3]);
     int pos = box->scroll;
     int drawPos = 0;
     if (pos > 0) {
@@ -79,7 +80,7 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
         return;
 	}
     if (buttonID != enter && box->cursor == -1) mathinput_clear(box);
-    int charToPutInBuffer = -1;
+    unsigned char charToPutInBuffer = -1;
 	if (buttonID <= nine) {
         charToPutInBuffer = buttonID;
 	} else if (buttonID <= divide) {
@@ -140,6 +141,23 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
         mathinput_setCursor(box, CURSOR_ON);
         if (box->scroll > 0 && box->cursor > box->scroll) {
             gui_draw_char(box->posX, box->posY, CHAR_ARROW_LEFT, box->font, 1);
+        }
+    }
+
+    if (buttonID == del) {
+        if (box->cursor == box->length) { // after last character
+        box->length--;
+            mathinput_setCursor(box, CURSOR_OFF);
+            box->cursor--;
+            mathinput_setCursor(box, CURSOR_ON);
+        } else {
+            int i = box->cursor;
+            box->length--;
+            while (i < box->length) {
+                box->buffer[i] = box->buffer[i + 1];
+                i++;
+            }
+            mathinput_redraw(box);
         }
     }
 

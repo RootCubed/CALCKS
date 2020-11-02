@@ -12,7 +12,6 @@ void solver_init() {
     solver_s.c = mathinput_initBox(FNT_SM, 40, 13, 31);
     solver_s.currentSelected = 0;
     solver_s.solveType = SOLV_LINEAR;
-    mathinput_setCursor(solver_s.a, CURSOR_ON);
 }
 
 void solver_free() {
@@ -31,6 +30,7 @@ void solver_solveLinear() {
 
 void solver_redrawScreenLinear() {
     if (solver_s.currentSelected == 3) {
+        disp_clear();
         mathinput_buttonPress(solver_s.a, enter);
         mathinput_buttonPress(solver_s.b, enter);
 
@@ -44,6 +44,9 @@ void solver_redrawScreenLinear() {
         gui_draw_string("q=", 0, 20, FNT_SM, (solver_s.currentSelected == 1));
         gui_draw_string("Calculate", 0, 45, FNT_MD, (solver_s.currentSelected == 2));
 
+        mathinput_redraw(solver_s.a);
+        mathinput_redraw(solver_s.b);
+
         mathinput_setCursor(solver_s.a, CURSOR_HIDDEN);
         mathinput_setCursor(solver_s.b, CURSOR_HIDDEN);
         if (solver_s.currentSelected == 0) {
@@ -52,9 +55,6 @@ void solver_redrawScreenLinear() {
         if (solver_s.currentSelected == 1) {
             mathinput_setCursor(solver_s.b, CURSOR_ON);
         }
-
-        mathinput_redraw(solver_s.a);
-        mathinput_redraw(solver_s.b);
     }
 }
 
@@ -80,6 +80,7 @@ void solver_solveQuadratic() {
 
 void solver_redrawScreenQuadratic() {
     if (solver_s.currentSelected == 4) {
+        disp_clear();
         mathinput_buttonPress(solver_s.a, enter);
         mathinput_buttonPress(solver_s.b, enter);
         mathinput_buttonPress(solver_s.c, enter);
@@ -106,6 +107,10 @@ void solver_redrawScreenQuadratic() {
         gui_draw_string("c=", 0, 30, FNT_SM, (solver_s.currentSelected == 2));
         gui_draw_string("Calculate", 0, 45, FNT_MD, (solver_s.currentSelected == 3));
 
+        mathinput_redraw(solver_s.a);
+        mathinput_redraw(solver_s.b);
+        mathinput_redraw(solver_s.c);
+
         mathinput_setCursor(solver_s.a, CURSOR_HIDDEN);
         mathinput_setCursor(solver_s.b, CURSOR_HIDDEN);
         mathinput_setCursor(solver_s.c, CURSOR_HIDDEN);
@@ -118,10 +123,6 @@ void solver_redrawScreenQuadratic() {
         if (solver_s.currentSelected == 2) {
             mathinput_setCursor(solver_s.c, CURSOR_ON);
         }
-
-        mathinput_redraw(solver_s.a);
-        mathinput_redraw(solver_s.b);
-        mathinput_redraw(solver_s.c);
     }
 }
 
@@ -147,9 +148,10 @@ void solver_buttonPress(int buttonID) {
     if (buttonID == back) {
         solver_needsRedraw = 1;
         solver_s.currentSelected = 0;
-        mathinput_buttonPress(solver_s.a, enter);
-        mathinput_buttonPress(solver_s.b, enter);
-        mathinput_buttonPress(solver_s.c, enter);
+        mathinput_setCursor(solver_s.a, CURSOR_HIDDEN);
+        mathinput_setCursor(solver_s.b, CURSOR_HIDDEN);
+        mathinput_setCursor(solver_s.c, CURSOR_HIDDEN);
+        return;
     }
     if (buttonID == left && solver_s.currentSelected == -1) {
         if (solver_s.solveType == SOLV_QUADRATIC) {
