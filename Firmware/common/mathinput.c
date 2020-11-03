@@ -51,7 +51,7 @@ int bufferCharToFontChar(unsigned char bufChar) {
 void mathinput_redraw(inputBox *box) {
     // Commented out so that the extra character gets cleared when a character somewhere else gets deleted
     //int posOffset = MIN(SCREEN_WIDTH - box->posX, (box->length - box->scroll) * fonts[box->font][2]);
-    gui_clear_rect(box->posX, box->posY, SCREEN_WIDTH - box->posX, fonts[box->font][3]);
+    gui_clear_rect(box->posX, box->posY, SCREEN_WIDTH - box->posX, fonts[box->font][3] + 1);
     int pos = box->scroll;
     int drawPos = 0;
     if (pos > 0) {
@@ -191,7 +191,7 @@ void mathinput_setCursor(inputBox *box, int onOff) {
     if (onOff == CURSOR_ON) {
         gui_draw_rect(box->posX + (box->cursor - box->scroll) * fontWidth, box->posY, fontWidth, fontHeight, 1);
     } else {
-        gui_clear_rect(box->posX + (box->cursor - box->scroll) * fontWidth, box->posY, fontWidth, fontHeight);
+        gui_clear_rect(box->posX + (box->cursor - box->scroll) * fontWidth, box->posY, fontWidth, fontHeight + 1);
         int charToDraw = bufferCharToFontChar(box->buffer[box->cursor]);
         if (box->cursor < box->length && charToDraw != -1) {
             gui_draw_char(box->posX + (box->cursor - box->scroll) * fontWidth, box->posY, charToDraw, box->font, 0);
@@ -200,7 +200,7 @@ void mathinput_setCursor(inputBox *box, int onOff) {
 }
 
 void mathinput_clear(inputBox *box) {
-    gui_clear_rect(box->posX, box->posY, box->length * fonts[box->font][2], fonts[box->font][3]);
+    gui_clear_rect(box->posX, box->posY, box->length * fonts[box->font][2], fonts[box->font][3] + 1); // height + 1 because of inverted text taking up one more space
     box->scroll = 0;
     box->cursor = 0;
     box->length = 0;

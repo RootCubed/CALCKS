@@ -76,8 +76,12 @@ int prevAdc = 0;
 float chargingAnim = 0.2;
 int chargingAnimDelay = 50;
 
+int screenBeforeError;
+
 void buttonPressed(int);
 void infoScreen_battery();
+
+void errorScreen(char *);
 
 #ifndef console
 // https://jeelabs.org/2011/05/22/atmega-memory-use/
@@ -200,7 +204,7 @@ int main(void) {
 				mandel_draw();
 				break;
 			case m_graph:
-				graph_draw(mainScreenInput->buffer);
+				graph_updateScreen();
 				break;
 			case m_solve_menu:
 				solver_updateScreen();
@@ -226,6 +230,14 @@ int main(void) {
 
 		_delay_ms(10);
 	}
+}
+
+void errorScreen(char *errorText) {
+	screenBeforeError = currMode;
+	disp_clear();
+	gui_draw_string(errorText, (SCREEN_WIDTH - 13 * fonts[FNT_MD][2]) / 2, 24, FNT_MD, 0);
+	gui_draw_string("OK", (SCREEN_WIDTH - 3 * fonts[FNT_SM][2]) / 2, 50, FNT_SM, 1);
+	currMode = m_error;
 }
 
 void infoScreen_battery() {
@@ -275,10 +287,7 @@ void buttonPressed_calc(int buttonID) {
 
 	if (buttonID == enter) {
 		if (mathinput_checkSyntax(mainScreenInput)) {
-			disp_clear();
-			gui_draw_string("Syntax error", (SCREEN_WIDTH - 13 * fonts[FNT_MD][2]) / 2, 24, FNT_MD, 0);
-			gui_draw_string("OK", (SCREEN_WIDTH - 3 * fonts[FNT_SM][2]) / 2, 50, FNT_SM, 1);
-			currMode = m_error;
+			errorScreen("Syntax Error");
 			return;
 		}
 		termTree = parse_term(mainScreenInput->buffer);
@@ -346,7 +355,9 @@ void buttonPressed(int buttonID) {
 			buttonPressed_calc(buttonID);
 			break;
 		case m_graph:
-			graph_buttonPress(buttonID);
+			if (graph_buttonPress(buttonID) != 0) {
+				errorScreen("Syntax Error");
+			}
 		case m_mandelbrot:
 		case m_info:
 			if (buttonID == back) {
@@ -361,11 +372,13 @@ void buttonPressed(int buttonID) {
 				disp_clear();
 				needsRedraw = 1;
 			}
-			solver_buttonPress(buttonID);
+			if (solver_buttonPress(buttonID) != 0) {
+				errorScreen("Syntax Error");
+			}
 			break;
 		case m_error:
 			if (buttonID == enter) {
-				currMode = m_calc;
+				currMode = screenBeforeError;
 				needsRedraw = 1;
 			}
 			break;

@@ -32,6 +32,6 @@ void solver_solveLinear();
 void solver_redrawScreenQuadratic();
 void solver_solveQuadratic();
 
-void solver_buttonPress(int);
+int solver_buttonPress(int);
 
 #endif

@@ -134,9 +134,12 @@ int term_checkSyntax(u8 *input) {
         if (f.type == OPTYPE_SIMPLE) {
             if (isLastInput || (fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_VAR && input[i + 1] != OP_BRACK_OPEN)) return i + 1;
         }
-        if (input[i] == OP_BRACK_OPEN) bracketDepth++;
+        if (input[i] == OP_BRACK_OPEN) {
+            if (input[i + 1] == OP_BRACK_CLOSE) return i + 1;
+            bracketDepth++;
+        }
         if (input[i] == OP_BRACK_CLOSE) {
-            if (!isLastInput && (fNext.type != OPTYPE_SIMPLE || input[i + 1] != OP_BRACK_CLOSE)) return i + 1;
+            if (!isLastInput && fNext.type != OPTYPE_SIMPLE && input[i + 1] != OP_BRACK_CLOSE) return i + 1;
             if (bracketDepth == 0) return i;
             bracketDepth--;
         }

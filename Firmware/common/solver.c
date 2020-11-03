@@ -146,14 +146,14 @@ void solver_updateScreen() {
     mathinput_cursorFrame(solver_s.c);
 }
 
-void solver_buttonPress(int buttonID) {
+int solver_buttonPress(int buttonID) {
     if (buttonID == back) {
         solver_needsRedraw = 1;
         solver_s.currentSelected = 0;
         mathinput_setCursor(solver_s.a, CURSOR_HIDDEN);
         mathinput_setCursor(solver_s.b, CURSOR_HIDDEN);
         mathinput_setCursor(solver_s.c, CURSOR_HIDDEN);
-        return;
+        return 0;
     }
     if (buttonID == left && solver_s.currentSelected == -1) {
         if (solver_s.solveType == SOLV_QUADRATIC) {
@@ -175,12 +175,30 @@ void solver_buttonPress(int buttonID) {
     }
     if (solver_s.currentSelected == 0) {
         mathinput_buttonPress(solver_s.a, buttonID);
+        if (buttonID == enter || buttonID == up || buttonID == down) {
+            if (mathinput_checkSyntax(solver_s.a) == 1) {
+                solver_needsRedraw = 1;
+                return 1;
+            }
+        }
     }
     if (solver_s.currentSelected == 1) {
         mathinput_buttonPress(solver_s.b, buttonID);
+        if (buttonID == enter || buttonID == up || buttonID == down) {
+            if (mathinput_checkSyntax(solver_s.b) == 1) {
+                solver_needsRedraw = 1;
+                return 1;
+            }
+        }
     }
     if (solver_s.solveType == SOLV_QUADRATIC && solver_s.currentSelected == 2) {
         mathinput_buttonPress(solver_s.c, buttonID);
+        if (buttonID == enter || buttonID == up || buttonID == down) {
+            if (mathinput_checkSyntax(solver_s.c) == 1) {
+                solver_needsRedraw = 1;
+                return 1;
+            }
+        }
     }
 
     if (buttonID == enter || buttonID == down) {
@@ -194,4 +212,5 @@ void solver_buttonPress(int buttonID) {
             solver_needsRedraw = 1;
         }
     }
+    return 0;
 }
