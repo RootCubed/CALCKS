@@ -3,7 +3,7 @@ AVRDUDE = avrdude
 
 PORT=/dev/ttyACM0
 
-ifeq ($(OS), Windows)
+ifeq ($(OS), Windows_NT)
 	SHELL=cmd
 	PORT=COM3
 endif
