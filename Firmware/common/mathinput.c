@@ -207,6 +207,16 @@ void mathinput_clear(inputBox *box) {
     box->buffer[0] = CHAR_END;
 }
 
+int mathinput_checkSyntax(inputBox *box) {
+    int syntaxErrorLoc = term_checkSyntax(box->buffer);
+    if (syntaxErrorLoc > -1) {
+        box->cursor = syntaxErrorLoc;
+        mathinput_setCursor(box, CURSOR_HIDDEN);
+        return 1;
+    }
+    return 0;
+}
+
 double mathinput_calcContent(inputBox *box) {
     opNode *termTree = parse_term(box->buffer);
     double res = evaluate_term(termTree, 0);

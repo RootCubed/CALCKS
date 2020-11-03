@@ -55,7 +55,8 @@ enum modes {
 	m_mandelbrot,
 	m_graph,
 	m_solve_menu,
-	m_info
+	m_info,
+	m_error
 };
 
 char resBuf[0x20];
@@ -273,6 +274,13 @@ void buttonPressed_calc(int buttonID) {
 	mathinput_buttonPress(mainScreenInput, buttonID);
 
 	if (buttonID == enter) {
+		if (mathinput_checkSyntax(mainScreenInput)) {
+			disp_clear();
+			gui_draw_string("Syntax error", (SCREEN_WIDTH - 13 * fonts[FNT_MD][2]) / 2, 24, FNT_MD, 0);
+			gui_draw_string("OK", (SCREEN_WIDTH - 3 * fonts[FNT_SM][2]) / 2, 50, FNT_SM, 1);
+			currMode = m_error;
+			return;
+		}
 		termTree = parse_term(mainScreenInput->buffer);
 		double res = evaluate_term(termTree, 0);
 		term_free(termTree);
@@ -344,7 +352,6 @@ void buttonPressed(int buttonID) {
 			if (buttonID == back) {
 				currMode = m_calc;
 				disp_clear();
-				mathinput_redraw(mainScreenInput);
 				needsRedraw = 1;
 			}
 			break;
@@ -352,10 +359,16 @@ void buttonPressed(int buttonID) {
 			if (buttonID == back) {
 				currMode = m_calc;
 				disp_clear();
-				mathinput_redraw(mainScreenInput);
 				needsRedraw = 1;
 			}
 			solver_buttonPress(buttonID);
+			break;
+		case m_error:
+			if (buttonID == enter) {
+				currMode = m_calc;
+				needsRedraw = 1;
+			}
+			break;
 	}
 	if (currMode == m_info) {
 		if (buttonID == bracket_open) {

@@ -12,7 +12,7 @@ const u8 PRECEDENCE[] = {
     3,    // power
 };
 
-//u8 input[] = {NUM_4, OP_PLUS, NUM_4, OP_BRACK_CLOSE, OP_DIV, NUM_2, CHAR_END};
+//u8 input[] = {OP_BRACK_OPEN, NUM_4, OP_PLUS, NUM_4, OP_BRACK_CLOSE, OP_DIV, NUM_2, CHAR_END};
 
 opNode* node_stack_pop(opStack* stack) {
     opStackNode* top = stack->top;
@@ -115,7 +115,38 @@ void term_free(opNode* node) {
     free(node);
 }
 
-opNode* parse_term(u8* input) {
+int term_checkSyntax(u8 *input) {
+    int bracketDepth = 0;
+    int i = 0;
+    int hasHadComma = 0;
+    while (input[i] != CHAR_END) {
+        symbolField f = getFields(input[i]);
+        symbolField fNext = getFields(input[i + 1]);
+        int isLastInput = (input[i + 1] == CHAR_END);
+        if (input[i] == NUM_POINT) {
+            if (hasHadComma) return i;
+            if (isLastInput || fNext.type != OPTYPE_CONST) return i + 1;
+            hasHadComma = 1;
+        }
+        if (f.type == OPTYPE_CONST) {
+            if (!isLastInput && fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_SIMPLE && fNext.type != OPTYPE_END) return i + 1;
+        }
+        if (f.type == OPTYPE_SIMPLE) {
+            if (isLastInput || (fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_VAR && input[i + 1] != OP_BRACK_OPEN)) return i + 1;
+        }
+        if (input[i] == OP_BRACK_OPEN) bracketDepth++;
+        if (input[i] == OP_BRACK_CLOSE) {
+            if (!isLastInput && (fNext.type != OPTYPE_SIMPLE || input[i + 1] != OP_BRACK_CLOSE)) return i + 1;
+            if (bracketDepth == 0) return i;
+            bracketDepth--;
+        }
+        i++;
+    }
+    if (bracketDepth != 0) return i;
+    return NO_SYNTAX_ERROR;
+}
+
+opNode* parse_term(u8 *input) {
     double currNum = 0;
     u8 currVar = 0;
     u8 currValType = VALTYPE_NUMBER;
@@ -444,6 +475,10 @@ void print_char_console(u8 input) {
         i++;
     }
     printf("\n");
+    int syntaxErrRes = term_checkSyntax(input);
+    if (syntaxErrRes > -1) {
+        printf("Syntax error at %d\n", syntaxErrRes);
+    }
     opNode* term = parse_term(input);
     printf("Traversing nodes:\n");
     print_node(term);

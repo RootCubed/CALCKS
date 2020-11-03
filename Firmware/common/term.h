@@ -52,6 +52,8 @@
 #define VALTYPE_VAR    2
 #define VALTYPE_OP     3
 
+#define NO_SYNTAX_ERROR (-1)
+
 typedef struct opNode opNode;
 
 struct opNode {
@@ -84,15 +86,16 @@ typedef struct symbolField {
     u8 value;
 } symbolField;
 
-opNode* node_stack_pop(opStack*);
-void node_stack_remove(opStack*, opStackNode*);
-void node_stack_push(opStack*, opNode*);
-int node_stack_is_empty(opStack*);
-int node_stack_length(opStack*);
+opNode *node_stack_pop(opStack *);
+void node_stack_remove(opStack *, opStackNode *);
+void node_stack_push(opStack *, opNode *);
+int node_stack_is_empty(opStack *);
+int node_stack_length(opStack *);
 
-void term_free(opNode*);
-opNode* parse_term(u8*);
-double evaluate_term(opNode*, double);
+void term_free(opNode *);
+int term_checkSyntax(u8 *);
+opNode *parse_term(u8 *);
+double evaluate_term(opNode *, double);
 symbolField getFields(u8);
 
 #endif /* TERM_H_ */

@@ -36,6 +36,8 @@ void mathinput_setCursor(inputBox *, int);
 
 void mathinput_clear(inputBox *);
 
+int mathinput_checkSyntax(inputBox *);
+
 double mathinput_calcContent(inputBox *);
 
 #endif
