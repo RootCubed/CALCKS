@@ -12,7 +12,7 @@ const u8 PRECEDENCE[] = {
     3,    // power
 };
 
-//u8 input[] = {OP_BRACK_OPEN, NUM_4, OP_PLUS, NUM_4, OP_BRACK_CLOSE, OP_DIV, NUM_2, CHAR_END};
+//u8 input[] = {OP_BRACK_OPEN, OP_MINUS, NUM_1, NUM_6, OP_BRACK_CLOSE, OP_DIV, OP_BRACK_OPEN, OP_MINUS, NUM_3, OP_MINUS, NUM_1, OP_BRACK_CLOSE, OP_POW, NUM_3, CHAR_END};
 
 opNode* node_stack_pop(opStack* stack) {
     opStackNode* top = stack->top;
@@ -84,6 +84,9 @@ void print_node(opNode* n) {
         case 3:
             strcpy(opNameBuf, "div");
             break;
+        case 5:
+            strcpy(opNameBuf, "pow");
+            break;
     }
     printf("%s(", opNameBuf);
     if (n->op1Type == OPNODE_CONST) {
@@ -123,12 +126,18 @@ int term_checkSyntax(u8 *input) {
         symbolField f = getFields(input[i]);
         symbolField fNext = getFields(input[i + 1]);
         int isLastInput = (input[i + 1] == CHAR_END);
+        if (f.type != OPTYPE_CONST) {
+            hasHadComma = 0;
+        }
         if (input[i] == NUM_POINT) {
             if (hasHadComma) return i;
             if (isLastInput || fNext.type != OPTYPE_CONST) return i + 1;
             hasHadComma = 1;
         }
-        if (f.type == OPTYPE_CONST) {
+        if (f.type == OPTYPE_VAR) {
+            if (fNext.type == OPTYPE_VAR || fNext.type == OPTYPE_CONST) return i + 1;
+        }
+        if (f.type == OPTYPE_CONST || input[i] == VAR_X) {
             if (!isLastInput && fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_SIMPLE && fNext.type != OPTYPE_END) return i + 1;
         }
         if (f.type == OPTYPE_SIMPLE) {
@@ -254,6 +263,7 @@ opNode* parse_term(u8 *input) {
                     //printf("current type is %d\n", currValType);
                     if (currOpInStack->ptr->operation == (OP_BRACK_OPEN & 0b11111)) {
                         node_stack_remove(&stack, currOpInStack);
+                        free(currOpInStack->ptr);
                         opNode *dummyOp = (opNode *) malloc(sizeof(opNode));
                         dummyOp->operation = OP_PLUS & 0b11111;
                         if (currValType == VALTYPE_NUMBER) {
@@ -297,6 +307,9 @@ opNode* parse_term(u8 *input) {
                     }
                     currValOp = lastRemaining;
                     currValType = VALTYPE_OP;
+                    if (currOpInStack != NULL) {
+                        free(currOpInStack->ptr);
+                    }
                     node_stack_remove(&stack, currOpInStack);
                 }
                 break;
@@ -320,6 +333,9 @@ opNode* parse_term(u8 *input) {
                     break;
                 case 4:
                     strcpy(opNameBuf, "(");
+                    break;
+                case 5:
+                    strcpy(opNameBuf, "^");
                     break;
             }
             printf("%s ", opNameBuf);
@@ -435,6 +451,9 @@ void print_char_console(u8 input) {
                 break;
             case 3:
                 strcpy(opNameBuf, "/");
+                break;
+            case 5:
+                strcpy(opNameBuf, "^");
                 break;
         }
         printf("%s", opNameBuf);
