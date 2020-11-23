@@ -122,6 +122,9 @@ int term_checkSyntax(u8 *input) {
     int bracketDepth = 0;
     int i = 0;
     int hasHadComma = 0;
+    if (input[0] == CHAR_END) return 0;
+    symbolField firstInput = getFields(input[0]);
+    if (firstInput.type != OPTYPE_CONST && firstInput.type != OPTYPE_VAR && input[0] != OP_BRACK_OPEN) return 0;
     while (input[i] != CHAR_END) {
         symbolField f = getFields(input[i]);
         symbolField fNext = getFields(input[i + 1]);

@@ -208,6 +208,7 @@ void gui_draw_line(int x1, int y1, int x2, int y2) {
     int diffY = y2 - y1;
     double q = (double) diffY / diffX;
     for (double cX = x1; cX <= x2; cX += 0.1) {
+        if (round(cX) < 0 || round(cX) > 128 || y1 + round(q * (cX - x1)) < 0 || y1 + round(q * (cX - x1)) > 64) continue;
         gui_update_byte(0x01, round(cX), y1 + round(q * (cX - x1)));
     }
 }

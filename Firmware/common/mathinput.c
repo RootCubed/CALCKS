@@ -1,5 +1,6 @@
 #include "mathinput.h"
 #include <stdio.h>
+#include <string.h>
 
 inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
     inputBox *theBox = malloc(sizeof(inputBox));
@@ -9,7 +10,7 @@ inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
     theBox->posY = y;
     theBox->cursor = 0;
     theBox->buffer = malloc(maxChars * sizeof(char));
-    theBox->buffer[0] = CHAR_END;
+    memset(theBox->buffer, CHAR_END, theBox->maxChars);
     theBox->length = 0;
     theBox->scroll = 0;
     theBox->cursorBlinkState = CURSOR_HIDDEN;
@@ -52,6 +53,9 @@ void mathinput_redraw(inputBox *box) {
     // Commented out so that the extra character gets cleared when a character somewhere else gets deleted
     //int posOffset = MIN(SCREEN_WIDTH - box->posX, (box->length - box->scroll) * fonts[box->font][2]);
     gui_clear_rect(box->posX, box->posY, SCREEN_WIDTH - box->posX, fonts[box->font][3] + 1);
+    if (box->cursor > box->scroll + (SCREEN_WIDTH - box->posX) / fonts[box->font][2]) {
+        box->scroll = ((box->cursor * fonts[box->font][2]) - (SCREEN_WIDTH - box->posX)) / fonts[box->font][2] + 1;
+    }
     int pos = box->scroll;
     int drawPos = 0;
     if (pos > 0) {
@@ -204,7 +208,7 @@ void mathinput_clear(inputBox *box) {
     box->scroll = 0;
     box->cursor = 0;
     box->length = 0;
-    box->buffer[0] = CHAR_END;
+    memset(box->buffer, CHAR_END, box->maxChars);
 }
 
 int mathinput_checkSyntax(inputBox *box) {

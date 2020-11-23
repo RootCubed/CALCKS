@@ -202,6 +202,7 @@ int solver_buttonPress(int buttonID) {
     }
 
     if (buttonID == enter || buttonID == down) {
+        if (solver_s.currentSelected < 3 || (solver_s.solveType == SOLV_QUADRATIC && solver_s.currentSelected < 4))
         solver_s.currentSelected++;
         solver_needsRedraw = 1;
     }
