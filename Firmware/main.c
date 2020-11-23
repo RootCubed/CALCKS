@@ -17,9 +17,10 @@
 #include <stdlib.h>
 
 #ifdef console
-	#include <windows.h>
-	#define _delay_ms Sleep
-	DWORD WINAPI ConsoleListener(void* data) {
+	#include <unistd.h>
+	#include <pthread.h>
+	#define _delay_ms(a) sleep(a / 1000.0)
+	void *ConsoleListener(void *vargp) {
 		while (1) {
 			char code = getchar();
 			if (code == 'g') {
@@ -43,6 +44,7 @@
 	#include <util/delay.h>
 	#include <avr/sleep.h>
 	#include <avr/interrupt.h>
+	#include <avr/wdt.h>
 #endif
 
 #define BTN_UP 0b00001000
@@ -84,6 +86,21 @@ void infoScreen_battery();
 void errorScreen(char *);
 
 #ifndef console
+// https://stackoverflow.com/questions/32802221/how-to-write-a-custom-reset-function-in-c-for-avr-studio
+
+// Function Prototype
+/*void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+
+
+// Function Implementation
+void wdt_init(void)
+{
+    MCUSR = 0;
+    wdt_disable();
+
+    return;
+}*/
+
 // https://jeelabs.org/2011/05/22/atmega-memory-use/
 int freeRam() {
 	extern int __heap_start, *__brkval; 
@@ -94,7 +111,8 @@ int freeRam() {
 
 int main(void) {
 	#ifdef console
-		CreateThread(NULL, 0, ConsoleListener, NULL, 0, NULL);
+		pthread_t thread_id;
+		pthread_create(&thread_id, NULL, ConsoleListener, NULL);
 	#endif
 	buttons_initialize();
 	disp_initialize();
@@ -250,7 +268,7 @@ void infoScreen_battery() {
 	
 	double percentage;
 	if ((PINB & 1) == 0) { // charge controller PROG
-		if (chargingAnimDelay < 50) {
+		if (chargingAnimDelay < 5) {
 			chargingAnimDelay++;
 			goto ifLoopBreak;
 		}

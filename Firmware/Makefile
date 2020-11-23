@@ -5,7 +5,7 @@ PORT=/dev/ttyACM0
 
 ifeq ($(OS), Windows_NT)
 	SHELL=cmd
-	PORT=COM3
+	PORT=COM4
 endif
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
@@ -26,15 +26,16 @@ pre-avr:
 
 pre-console:
 	$(eval CC = gcc)
-	$(eval CCFLAGS = -O0 -Dconsole -g)
+	$(eval CCFLAGS = -O0 -Dconsole -g -lm -lpthread)
+	$(eval LDFLAGS = -lm -lpthread)
 
 avr: pre-avr main.o $(avr-files) $(common-obj)
-	$(CC) main.o $(subst avr/,,$(avr-files)) $(subst common/,,$(common-obj)) $(CCFLAGS) $(LDFLAGS) -lm -o main.elf
+	$(CC) main.o $(subst avr/,,$(avr-files)) $(subst common/,,$(common-obj)) $(CCFLAGS) $(LDFLAGS) -o main.elf
 	$(OBJCOPY) -O ihex main.elf main.hex
 	
 console: pre-console main.o $(console-files) $(common-obj)
-	$(CC) -o server/calc.exe main.o $(subst console/,,$(console-files)) $(subst common/,,$(common-obj))
-	cd server & node server.js
+	$(CC) -o server/calc main.o $(subst console/,,$(console-files)) $(subst common/,,$(common-obj)) $(LDFLAGS)
+	cd server && node server.js
 
 eepromprog.hex: pre-avr eepromprog.o $(avr-files)
 	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
@@ -44,10 +45,10 @@ server/eepromdata.bin: eepromgen/*.png
 	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
 
 eeprom: server/eepromdata.bin
-	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r -B8
 
 upload: avr
-	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i -B8
 
 clean:
 	rm *.o
