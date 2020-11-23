@@ -3,9 +3,12 @@ AVRDUDE = avrdude
 
 PORT=/dev/ttyACM0
 
+LDFLAGS = -lm -lpthread
+
 ifeq ($(OS), Windows_NT)
 	SHELL=cmd
 	PORT=COM4
+	LDFLAGS = -lm
 endif
 
 avr-files = avr/buttons.o avr/display.o avr/eep.o
@@ -27,7 +30,6 @@ pre-avr:
 pre-console:
 	$(eval CC = gcc)
 	$(eval CCFLAGS = -O0 -Dconsole -g -lm -lpthread)
-	$(eval LDFLAGS = -lm -lpthread)
 
 avr: pre-avr main.o $(avr-files) $(common-obj)
 	$(CC) main.o $(subst avr/,,$(avr-files)) $(subst common/,,$(common-obj)) $(CCFLAGS) $(LDFLAGS) -o main.elf

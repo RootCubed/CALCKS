@@ -17,10 +17,17 @@
 #include <stdlib.h>
 
 #ifdef console
+
+#ifdef _WIN32
+	#include <windows.h>
+	#define _delay_ms Sleep
+	DWORD WINAPI ConsoleListener(void* data) {
+#else
 	#include <unistd.h>
 	#include <pthread.h>
 	#define _delay_ms(a) sleep(a / 1000.0)
 	void *ConsoleListener(void *vargp) {
+#endif
 		while (1) {
 			char code = getchar();
 			if (code == 'g') {
@@ -111,8 +118,12 @@ int freeRam() {
 
 int main(void) {
 	#ifdef console
+	#ifdef _WIN32
+		CreateThread(NULL, 0, ConsoleListener, NULL, 0, NULL);
+	#else
 		pthread_t thread_id;
 		pthread_create(&thread_id, NULL, ConsoleListener, NULL);
+	#endif
 	#endif
 	buttons_initialize();
 	disp_initialize();
