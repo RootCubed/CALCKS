@@ -1,6 +1,6 @@
 #define F_CPU 8000000L
 
-#define VERSION_STRING "v0.9.2"
+#define VERSION_STRING "v1.0.0"
 
 #include "common/display.h"
 #include "common/buttons.h"
@@ -85,7 +85,11 @@ int prevAdc = 0;
 float chargingAnim = 0.2;
 int chargingAnimDelay = 50;
 
+long noInputTimeout = 0;
+
 int screenBeforeError;
+
+int info_mode = 0;
 
 void buttonPressed(int);
 void infoScreen_battery();
@@ -110,9 +114,10 @@ void wdt_init(void)
 
 // https://jeelabs.org/2011/05/22/atmega-memory-use/
 int freeRam() {
-	extern int __heap_start, *__brkval; 
-	int v; 
-	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+	//extern int __heap_start, *__brkval;
+	int *v = malloc(1);
+	free(v);
+	return (int) v;
 }
 #endif
 
@@ -139,6 +144,7 @@ int main(void) {
 	buttons_initialize();
 
 	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
+	term_init();
 	solver_init();
 	graph_init();
 
@@ -151,25 +157,32 @@ int main(void) {
 	ADCSRA |= (0b100 << ADPS0); // prescaler 16
 
 	#endif
+	
+	noInputTimeout = 0;
 
 	while (1) {
 		char specialButtons = buttons_get_special();
 		if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
+			noInputTimeout = 0;
 			buttonPressed(up);
 		}
 		if ((lastSpecialButtonState & BTN_DOWN) && !(specialButtons & BTN_DOWN)) {
+			noInputTimeout = 0;
 			buttonPressed(down);
 		}
 		if ((lastSpecialButtonState & BTN_LEFT) && !(specialButtons & BTN_LEFT)) {
+			noInputTimeout = 0;
 			buttonPressed(left);
 		}
 		if ((lastSpecialButtonState & BTN_RIGHT) && !(specialButtons & BTN_RIGHT)) {
+			noInputTimeout = 0;
 			buttonPressed(right);
 		}
 		lastSpecialButtonState = specialButtons;
 		int btnUnmapped = buttons_getPressed();
 		int currButton = -1;
 		if (btnUnmapped > -1) {
+			noInputTimeout = 0;
 			currButton = BUTTON_MAP[btnUnmapped];
 		}
 		if (currButton != -1) {
@@ -241,23 +254,63 @@ int main(void) {
 			case m_info:
 				if (needsRedraw) {
 					disp_clear();
-					prevAdc = 0;
-					chargingAnimDelay = 50;
-					gui_draw_string("CALCKS", 5, 64 - 32, FNT_MD, 0);
-					gui_draw_string(VERSION_STRING, 5 + 7 * 8, 64 - 32, FNT_MD, 0);
-					gui_draw_string("(c) Liam Braun 2020", 5, 64 - 8, FNT_SM, 0);
+					if (info_mode == 0) {
+						prevAdc = 0;
+						chargingAnimDelay = 50;
+						gui_draw_string("CALCKS", 5, 64 - 44, FNT_MD, 0);
+						gui_draw_string(VERSION_STRING, 5 + 7 * 8, 64 - 44, FNT_MD, 0);
+						gui_draw_string("(c) Liam Braun 2021", 5, 64 - 20, FNT_SM, 0);
+
+						gui_tab_button("About", 0);
+						gui_tab_button("More", 100);
+					} else if (info_mode == 1) {
+						const char *strings[3] = {
+							"CALCKS",
+							"Das Maturprojekt von",
+							"Liam Braun"
+						};
+						for (int i = 0; i < sizeof(strings) / sizeof(char *); i++) {
+							gui_draw_string(strings[i], 0, i * 8, FNT_SM, 0);
+						}
+					} else if (info_mode == 2) {
+						#ifndef console
+						extern unsigned int __data_start;
+						extern unsigned int __data_end;
+						extern unsigned int __bss_start;
+						extern unsigned int __bss_end;
+						extern unsigned int __heap_start;
+
+						u8 stackPointerL = *(u8*)0x005d;
+						u8 stackPointerH = *(u8*)0x005e;
+						sprintf(strBuf, ".data");
+						gui_draw_string(strBuf, 0, 0, FNT_SM, 0);
+						sprintf(strBuf, "%d-%d", (int) &__data_start, (int) & __data_end);
+						gui_draw_string(strBuf, 0, 8, FNT_SM, 0);
+
+						sprintf(strBuf, ".bss");
+						gui_draw_string(strBuf, 0, 18, FNT_SM, 0);
+						sprintf(strBuf, "%d-%d", (int) &__bss_start, (int) &__bss_end);
+						gui_draw_string(strBuf, 0, 26, FNT_SM, 0);
+
+						sprintf(strBuf, "Heap");
+						gui_draw_string(strBuf, 0, 36, FNT_SM, 0);
+						sprintf(strBuf, "%d-%d", (int) &__heap_start, freeRam());
+						gui_draw_string(strBuf, 0, 44, FNT_SM, 0);
+						
+						sprintf(strBuf, "SP = %d", (stackPointerH << 8) + stackPointerL);
+						gui_draw_string(strBuf, 0, 56, FNT_SM, 0);
+						#endif
+					}
 					needsRedraw = 0;
 				}
-				#ifndef console
-				sprintf(strBuf, "RAM Usage:");
-				gui_draw_string(strBuf, 0, 12, FNT_SM, 0);
-				sprintf(strBuf, "%d/16384 B", 16384 - freeRam());
-				gui_draw_string(strBuf, 0, 20, FNT_SM, 0);
-				#endif
-				infoScreen_battery();
+				if (info_mode == 0) {
+					infoScreen_battery();
+				}
 		}
 
 		_delay_ms(10);
+		noInputTimeout += 10;
+		if (noInputTimeout > (long) 1000 * 60 * 2) buttonPressed(off);
 	}
 }
 
@@ -319,11 +372,11 @@ void buttonPressed_calc(int buttonID) {
 			errorScreen("Syntax Error");
 			return;
 		}
-		termTree = parse_term(mainScreenInput->buffer);
-		double res = evaluate_term(termTree, 0);
-		term_free(termTree);
+		termTree = term_parse(mainScreenInput->buffer);
+		double res = term_evaluate(termTree, 0);
+		term_free(termTree, 1);
 		char resBuf[16];
-		sprintf(resBuf, "%g", res);
+		sprintf(resBuf, "%.10g", res);
 		gui_draw_string(resBuf, 0, 16, FNT_MD, 0);
 		needsClearRes = 1;
 		mathinput_setCursor(mainScreenInput, CURSOR_HIDDEN);
@@ -378,6 +431,8 @@ void buttonPressed(int buttonID) {
 		disp_command(DISP_CMD_ONOFF     | 1);
 		disp_command(DISP_CMD_ALL_ONOFF | 0);
 		#endif
+
+		noInputTimeout = 0;
 	}
 	switch (currMode) {
 		case m_calc:
@@ -388,11 +443,37 @@ void buttonPressed(int buttonID) {
 				errorScreen("Syntax Error");
 			}
 		case m_mandelbrot:
-		case m_info:
 			if (buttonID == back) {
 				currMode = m_calc;
 				disp_clear();
 				needsRedraw = 1;
+			}
+			break;
+		case m_info:
+			if (buttonID == back) {
+				if (info_mode == 0) {
+					currMode = m_calc;
+					disp_clear();
+				} else {
+					info_mode = 0;
+				}
+				needsRedraw = 1;
+			}
+			if (info_mode == 0) {
+				if (buttonID == bracket_open) {
+					disp_clear();
+					gui_draw_string("     Hello      ", 0, 64 - 48, FNT_MD, 0);
+					gui_draw_string("   @Brammyson   ", 0, 64 - 32, FNT_MD, 0);
+					gui_draw_string("   @Kaoskarl    ", 0, 64 - 16, FNT_MD, 0);
+				}
+				if (buttonID == f1) {
+					info_mode = 1;
+					needsRedraw = 1;
+				}
+				if (buttonID == f4) {
+					info_mode = 2;
+					needsRedraw = 1;
+				}
 			}
 			break;
 		case m_solve_menu:
@@ -411,14 +492,6 @@ void buttonPressed(int buttonID) {
 				needsRedraw = 1;
 			}
 			break;
-	}
-	if (currMode == m_info) {
-		if (buttonID == bracket_open) {
-			disp_clear();
-			gui_draw_string("     Hello      ", 0, 64 - 48, FNT_MD, 0);
-			gui_draw_string("   @Brammyson   ", 0, 64 - 32, FNT_MD, 0);
-			gui_draw_string("   @Kaoskarl    ", 0, 64 - 16, FNT_MD, 0);
-		}
 	}
 }
 

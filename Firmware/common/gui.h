@@ -9,6 +9,14 @@
 #define SCREEN_HEIGHT 64
 #define PIXEL_W_H_RATIO 0.85714
 
+#define FNT_SM 0
+#define FNT_MD 1
+
+#define FNT_ADDR 0
+#define FNT_LEN 1
+#define FNT_WIDTH 2
+#define FNT_HEIGHT 3
+
 // character set
 #define CHAR_PLUS 62
 #define CHAR_MINUS 63

@@ -30,9 +30,6 @@
 #define DISP_CMD_BOOSTER_RATIO_MODE 0xF8
 #define DISP_CMD_NOP 0xE3
 
-#define FNT_SM 0
-#define FNT_MD 1
-
 void disp_initialize();
 
 void disp_clear();

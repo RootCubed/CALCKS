@@ -24,26 +24,28 @@ void mathinput_freeBox(inputBox *box) {
 }
 
 int bufferCharToFontChar(unsigned char bufChar) {
-    if (bufChar <= NUM_F) return bufChar;
+    if (bufChar <= TERM_CONST_F) return bufChar;
     switch (bufChar) {
-        case OP_PLUS:
+        case TERM_OP_PLUS:
             return CHAR_PLUS;
-        case OP_MINUS:
+        case TERM_OP_MINUS:
             return CHAR_MINUS;
-        case OP_MULT:
+        case TERM_OP_MULT:
             return CHAR_MULT;
-        case OP_DIV:
+        case TERM_OP_DIV:
             return CHAR_DIV;
-        case OP_POW:
+        case TERM_OP_POW:
             return CHAR_POW;
-        case VAR_X:
+        case TERM_VAR_X:
             return 59;
-        case OP_BRACK_OPEN:
+        case TERM_OP_BRACK_OPEN:
             return CHAR_BROPEN;
-        case OP_BRACK_CLOSE:
+        case TERM_OP_BRACK_CLOSE:
             return CHAR_BRCLOSE;
-        case NUM_POINT:
+        case TERM_CONST_POINT:
             return CHAR_POINT;
+        case TERM_OP_SIN:
+            return 's' - 'a' + 36;
         default:
             return -1;
     }
@@ -92,19 +94,22 @@ void mathinput_buttonPress(inputBox *box, int buttonID) {
 		charToPutInBuffer = (buttonID - plus) | (OPTYPE_SIMPLE << 5);
 	}
 	if (buttonID == variable) {
-		charToPutInBuffer = VAR_X;
+		charToPutInBuffer = TERM_VAR_X;
 	}
 	if (buttonID == bracket_open) {
-		charToPutInBuffer = OP_BRACK_OPEN;
+		charToPutInBuffer = TERM_OP_BRACK_OPEN;
 	}
 	if (buttonID == bracket_close) {
-		charToPutInBuffer = OP_BRACK_CLOSE;
+		charToPutInBuffer = TERM_OP_BRACK_CLOSE;
 	}
 	if (buttonID == exponent) {
-		charToPutInBuffer = OP_POW;
+		charToPutInBuffer = TERM_OP_POW;
 	}
     if (buttonID == point) {
-        charToPutInBuffer = NUM_POINT;
+        charToPutInBuffer = TERM_CONST_POINT;
+    }
+    if (buttonID == btn_sin) {
+        charToPutInBuffer = TERM_OP_SIN;
     }
     int charToDraw = bufferCharToFontChar(charToPutInBuffer);
     if (charToDraw != -1) {
@@ -222,8 +227,8 @@ int mathinput_checkSyntax(inputBox *box) {
 }
 
 double mathinput_calcContent(inputBox *box) {
-    opNode *termTree = parse_term(box->buffer);
-    double res = evaluate_term(termTree, 0);
-    term_free(termTree);
+    opNode *termTree = term_parse(box->buffer);
+    double res = term_evaluate(termTree, 0);
+    term_free(termTree, 1);
     return res;
 }

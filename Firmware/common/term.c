@@ -5,14 +5,20 @@
 #include <string.h>
 #include <math.h>
 
-const u8 PRECEDENCE[] = {
-    1, 1, // plus, minus
-    2, 2, // mult, div
-    0,    // brackets
-    3,    // power
-};
+// This array contains information about operation precedence.
+// It is initialized in term_init so that it is clearer which operation has which precedence.
+u8 precedences[8];
 
-//u8 input[] = {OP_BRACK_OPEN, OP_MINUS, NUM_1, NUM_6, OP_BRACK_CLOSE, OP_DIV, OP_BRACK_OPEN, OP_MINUS, NUM_3, OP_MINUS, NUM_1, OP_BRACK_CLOSE, OP_POW, NUM_3, CHAR_END};
+void term_init() {
+    precedences[TERM_PLUS]    = 1;
+    precedences[TERM_MINUS]   = 1;
+    precedences[TERM_MULT]    = 2;
+    precedences[TERM_DIV]     = 2;
+    precedences[TERM_POW]     = 3;
+    precedences[TERM_BRACKET] = 0;
+}
+
+// Functions related to the operation stack
 
 opNode* node_stack_pop(opStack* stack) {
     opStackNode* top = stack->top;
@@ -69,51 +75,14 @@ int node_stack_length(opStack* stack) {
     return counter;
 }
 
-void print_node(opNode* n) {
-    char opNameBuf[16];
-    switch(n->operation) {
-        case 0:
-            strcpy(opNameBuf, "plus");
-            break;
-        case 1:
-            strcpy(opNameBuf, "minus");
-            break;
-        case 2:
-            strcpy(opNameBuf, "mult");
-            break;
-        case 3:
-            strcpy(opNameBuf, "div");
-            break;
-        case 5:
-            strcpy(opNameBuf, "pow");
-            break;
-    }
-    printf("%s(", opNameBuf);
-    if (n->op1Type == OPNODE_CONST) {
-        printf("%g, ", n->val1);
-    } else if (n->op1Type == OPNODE_VAR) {
-        printf("var%d, ", n->varField1);
-    } else {
-        if (n->op1 != NULL) print_node(n->op1);
-        printf(", ");
-    }
-    if (n->op2Type == OPNODE_CONST) {
-        printf("%g", n->val2);
-    } else if (n->op2Type == OPNODE_VAR) {
-        printf("var%d", n->varField2);
-    } else {
-        if (n->op2 != NULL) print_node(n->op2);
-    }
-    printf(")");
-}
-
-void term_free(opNode* node) {
+// Deallocates an opNode (with recursion or without)
+void term_free(opNode* node, int recursive) {
     opNode currNode = *node;
-    if (currNode.op1Type == OPNODE_OP) {
-        term_free(currNode.op1);
+    if (currNode.op1Type == OPNODE_OP && recursive) {
+        term_free(currNode.arg1.op, recursive);
     }
-    if (currNode.op2Type == OPNODE_OP) {
-        term_free(currNode.op2);
+    if (currNode.op2Type == OPNODE_OP && recursive) {
+        term_free(currNode.arg2.op, recursive);
     }
     free(node);
 }
@@ -124,7 +93,7 @@ int term_checkSyntax(u8 *input) {
     int hasHadComma = 0;
     if (input[0] == CHAR_END) return 0;
     symbolField firstInput = getFields(input[0]);
-    if (firstInput.type != OPTYPE_CONST && firstInput.type != OPTYPE_VAR && input[0] != OP_BRACK_OPEN) return 0;
+    if (firstInput.type != OPTYPE_CONST && firstInput.type != OPTYPE_VAR && firstInput.type != OPTYPE_BEGIN) return 0;
     while (input[i] != CHAR_END) {
         symbolField f = getFields(input[i]);
         symbolField fNext = getFields(input[i + 1]);
@@ -132,26 +101,26 @@ int term_checkSyntax(u8 *input) {
         if (f.type != OPTYPE_CONST) {
             hasHadComma = 0;
         }
-        if (input[i] == NUM_POINT) {
+        if (input[i] == TERM_CONST_POINT) {
             if (hasHadComma) return i;
             if (isLastInput || fNext.type != OPTYPE_CONST) return i + 1;
             hasHadComma = 1;
         }
-        if (f.type == OPTYPE_VAR) {
-            if (fNext.type == OPTYPE_VAR || fNext.type == OPTYPE_CONST) return i + 1;
-        }
-        if (f.type == OPTYPE_CONST || input[i] == VAR_X) {
-            if (!isLastInput && fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_SIMPLE && fNext.type != OPTYPE_END) return i + 1;
-        }
         if (f.type == OPTYPE_SIMPLE) {
-            if (isLastInput || (fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_VAR && input[i + 1] != OP_BRACK_OPEN)) return i + 1;
+            if (isLastInput || (fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_VAR && input[i + 1] != TERM_OP_BRACK_OPEN)) return i + 1;
         }
-        if (input[i] == OP_BRACK_OPEN) {
-            if (input[i + 1] == OP_BRACK_CLOSE) return i + 1;
-            bracketDepth++;
+        if (f.type == OPTYPE_BEGIN) {
+            switch (input[i]) {
+                case TERM_OP_BRACK_OPEN:
+                case TERM_OP_SIN:
+                case TERM_OP_COS:
+                case TERM_OP_TAN:
+                    if (input[i + 1] == TERM_OP_BRACK_CLOSE) return i + 1;
+                    bracketDepth++;
+                    break;
+            }
         }
-        if (input[i] == OP_BRACK_CLOSE) {
-            if (!isLastInput && fNext.type != OPTYPE_SIMPLE && input[i + 1] != OP_BRACK_CLOSE) return i + 1;
+        if (input[i] == TERM_OP_BRACK_CLOSE) {
             if (bracketDepth == 0) return i;
             bracketDepth--;
         }
@@ -161,12 +130,72 @@ int term_checkSyntax(u8 *input) {
     return NO_SYNTAX_ERROR;
 }
 
-opNode* parse_term(u8 *input) {
-    double currNum = 0;
-    u8 currVar = 0;
-    u8 currValType = VALTYPE_NUMBER;
-    opNode* currValOp;
-    opStack stack = {NULL};
+// Allocates and initializes an opNode with the given operation
+opNode *term_createOpNode(u8 op) {
+    opNode *node = (opNode *) malloc(sizeof(opNode));
+    memset(node, 0, sizeof(opNode));
+    node->operation = op;
+    return node;
+}
+
+// Nodes to be multiplied by implicit multiplication
+opNode *currImplMult[64];
+int currImplMultPos = -1;
+opNode *topImplMultNode() {
+    if (currImplMultPos < 0) return NULL;
+    return currImplMult[currImplMultPos];
+}
+
+int addImplMultNode(opNode *node) {
+    if (currImplMultPos >= 63) return 0;
+    currImplMultPos++;
+    currImplMult[currImplMultPos] = node;
+    return 1;
+}
+
+// This is executed whenever a block of implicit multiplications is ended.
+opNode *collateMultNodes() {
+    if (currImplMultPos < 0) return NULL;
+    if (getFields(topImplMultNode()->operation).type == OPTYPE_BEGIN) return NULL;
+
+    /*printf("collating mult nodes from array state:\n");
+    debugMultNodes();
+    printf("\n");*/
+
+    opNode *resNode = term_createOpNode(TERM_MULT);
+
+    opNode *currNode = resNode;
+    currNode->op1Type = OPNODE_OP;
+    currNode->arg1.op = topImplMultNode();
+    currNode->op2Type = OPNODE_CONST;
+    currNode->arg2.d = 1;
+    currImplMultPos--;
+    while (currImplMultPos >= 0) {
+        switch (topImplMultNode()->operation) {
+            case TERM_BRACKET:
+            case TERM_SIN:
+            case TERM_COS:
+            case TERM_TAN:
+                return resNode;
+        }
+        opNode *newNode = term_createOpNode(TERM_MULT);
+        newNode->op1Type = OPNODE_OP;
+        newNode->arg1.op = topImplMultNode();
+        newNode->op2Type = OPNODE_CONST;
+        newNode->arg2.d = 1;
+
+        newNode->parent = currNode;
+        currNode->op2Type = OPNODE_OP;
+        currNode->arg2.op = newNode;
+
+        currNode = newNode;
+        currImplMultPos--;
+    }
+    return resNode;
+}
+
+opNode* term_parse(u8 *input) {
+    opStack stack = {NULL}; // Initialize empty operation stack
     u8 pos = 0;
     opNode* currOp = NULL;
     int currNumAfterPoint = -1;
@@ -175,260 +204,246 @@ opNode* parse_term(u8 *input) {
         if (f.type != OPTYPE_CONST) {
             currNumAfterPoint = -1;
         }
+        opNode *currImplMultNode = topImplMultNode();
         switch (f.type) {
             case OPTYPE_CONST:
-                if (f.value == NUM_POINT) {
+                if (currImplMultNode == NULL || currImplMultNode->op1Type != OPNODE_CONST) {
+                    opNode *newNode = term_createOpNode(TERM_PLUS);
+                    newNode->op1Type = OPNODE_CONST;
+                    newNode->arg1.d = 0;
+                    newNode->op2Type = OPNODE_CONST;
+                    newNode->arg2.d = 0;
+
+                    if (!addImplMultNode(newNode)) {
+                        // TODO: Error handling
+                    }
+                    currImplMultNode = topImplMultNode();
+                    currNumAfterPoint = -1;
+                }
+                if (f.value == TERM_CONST_POINT) {
                     currNumAfterPoint = 0;
                     break;
                 }
-                currValType = VALTYPE_NUMBER;
                 double valueToAdd = f.value;
                 if (currNumAfterPoint == -1) {
-                    currNum *= 10;
+                    currImplMultNode->arg1.d *= 10;
                 } else {
                     currNumAfterPoint++;
                     for (int i = 0; i < currNumAfterPoint; i++) {
                         valueToAdd /= 10;
                     }
                 }
-                currNum += valueToAdd;
+                currImplMultNode->arg1.d += valueToAdd;
                 break;
-            case OPTYPE_SIMPLE:
-                currOp = (opNode *) malloc(sizeof(opNode));
-                memset(currOp, 0, sizeof(opNode));
-                currOp->operation = f.value;
+            case OPTYPE_VAR: {
+                opNode *newNode = term_createOpNode(TERM_MULT);
+                newNode->op1Type = OPNODE_VAR;
+                newNode->arg1.v = f.value;
+                newNode->op2Type = OPNODE_CONST;
+                newNode->arg2.d = 1;
 
-                // set val1/varField1 in case of non-empty stack, or if the current operator has higher precedence than the previous one
-                if (currValType == VALTYPE_NUMBER) {
-                    currOp->val1 = currNum;
-                    currOp->op1Type = OPNODE_CONST;
-                } else if (currValType == VALTYPE_VAR) {
-                    currOp->varField1 = currVar;
-                    currOp->op1Type = OPNODE_VAR;
-                } else if (currValType == VALTYPE_OP) {
-                    currOp->op1 = currValOp;
-                    currOp->op1Type = OPNODE_OP;
-                } 
+                if (!addImplMultNode(newNode)) {
+                    // TODO: Error handling
+                }
+                break;
+            }
+            case OPTYPE_SIMPLE:
+                currOp = term_createOpNode(f.value);
+
+                opNode *leftSide = collateMultNodes();
+                if (leftSide == NULL) {
+                    // TODO: Error handling
+                }
+                
+                // Set op1 in case of empty stack, or if the current operator has higher precedence than the previous one
+                currOp->op1Type = OPNODE_OP;
+                currOp->arg1.op = leftSide;
+                leftSide->parent = currOp;
                 if (!node_stack_is_empty(&stack)) {
-                    int currOpPre = PRECEDENCE[currOp->operation];
-                    if (currOpPre > PRECEDENCE[stack.top->ptr->operation]) {
-                        // if the precedence of the new operator is higher, leave the stack as-is
+                    int currOpPre = precedences[currOp->operation];
+                    if (currOpPre > precedences[stack.top->ptr->operation]) {
+                        // If the precedence of the new operator is higher, leave the stack as-is
                     } else {
-                        // first, find the node furthest back that has lower precedence
+                        // First, find the node furthest back that has lower precedence
                         opStackNode* currOpInStack = stack.top;
-                        while (currOpInStack->prev != NULL && currOpPre <= PRECEDENCE[currOpInStack->prev->ptr->operation]) {
+                        while (currOpInStack->prev != NULL && currOpPre <= precedences[currOpInStack->prev->ptr->operation]) {
                             currOpInStack = currOpInStack->prev;
                         }
-                        // connect currOp to that node
+                        // Connect currOp to that node
                         currOpInStack->ptr->parent = currOp;
-                        currOp->op1 = currOpInStack->ptr;
                         currOp->op1Type = OPNODE_OP;
-                        // now, while traversing the stack upwards, connect the nodes with eachother
+                        currOp->arg1.op = currOpInStack->ptr;
+                        // Now, while traversing the stack upwards, connect the nodes with each other
                         while (currOpInStack->next != NULL) {
                             opStackNode* nextOpInStack = currOpInStack->next;
                             nextOpInStack->ptr->parent = currOpInStack->ptr;
-                            currOpInStack->ptr->op2 = nextOpInStack->ptr;
                             currOpInStack->ptr->op2Type = OPNODE_OP;
+                            currOpInStack->ptr->arg2.op = nextOpInStack->ptr;
                             node_stack_remove(&stack, currOpInStack);
                             currOpInStack = nextOpInStack;
                         }
-                        // finally, add the constant value/variable as val2 on the last operation in the stack
-                        if (currValType == VALTYPE_NUMBER) {
-                            currOpInStack->ptr->val2 = currNum;
-                            currOpInStack->ptr->op2Type = OPNODE_CONST;
-                        } else if (currValType == VALTYPE_VAR) {
-                            currOpInStack->ptr->varField2 = currVar;
-                            currOpInStack->ptr->op2Type = OPNODE_VAR;
-                        } else if (currValType == VALTYPE_OP) {
-                            currOpInStack->ptr->op2 = currValOp;
-                            currOpInStack->ptr->op2Type = OPNODE_OP;
-                        }
+                        // Finally, add op2 on the last operation in the stack
+                        currOpInStack->ptr->op2Type = OPNODE_OP;
+                        currOpInStack->ptr->arg2.op = leftSide;
+                        leftSide->parent = currOpInStack->ptr;
                         node_stack_remove(&stack, currOpInStack);
                     }
                 }
                 node_stack_push(&stack, currOp);
-                currNum = 0;
-                break;
-            case OPTYPE_VAR:
-                currValType = VALTYPE_VAR;
-                currVar = f.value;
-                currNum = 0;
                 break;
             case OPTYPE_BEGIN:
-                currOp = (opNode *) malloc(sizeof(opNode));
-                memset(currOp, 0, sizeof(opNode));
-                currOp->operation = f.value;
+                currOp = term_createOpNode(f.value);
                 node_stack_push(&stack, currOp);
+                addImplMultNode(currOp);
                 break;
-            case OPTYPE_END:
-                if (f.value == (OP_BRACK_CLOSE & 0b11111)) {
-                    opStackNode* currOpInStack = stack.top;
-                    //printf("current type is %d\n", currValType);
-                    if (currOpInStack->ptr->operation == (OP_BRACK_OPEN & 0b11111)) {
-                        node_stack_remove(&stack, currOpInStack);
-                        free(currOpInStack->ptr);
-                        opNode *dummyOp = (opNode *) malloc(sizeof(opNode));
-                        dummyOp->operation = OP_PLUS & 0b11111;
-                        if (currValType == VALTYPE_NUMBER) {
-                            dummyOp->op1Type = OPNODE_CONST;
-                            dummyOp->val1 = currNum;
-                        } else if (currValType == VALTYPE_VAR) {
-                            dummyOp->op1Type = OPNODE_VAR;
-                            dummyOp->val1 = currVar;
-                        } else if (currValType == VALTYPE_OP) {
-                            dummyOp->op1Type = OPNODE_OP;
-                            dummyOp->op1 = currValOp;
-                        }
-                        dummyOp->op2Type = OPNODE_CONST;
-                        dummyOp->val2 = 0;
-                        currValOp = dummyOp;
-                        currValType = VALTYPE_OP;
-                        break;
-                    }
-                    if (currValType == VALTYPE_NUMBER) {
-                        currOpInStack->ptr->val2 = currNum;
-                        currOpInStack->ptr->op2Type = OPNODE_CONST;
-                    } else if (currValType == VALTYPE_VAR) {
-                        currOpInStack->ptr->varField2 = currVar;
-                        currOpInStack->ptr->op2Type = OPNODE_VAR;
-                    } else if (currValType == VALTYPE_OP) {
-                        currOpInStack->ptr->op2 = currValOp;
-                        currOpInStack->ptr->op2Type = OPNODE_OP;
-                    }
+            case OPTYPE_END: {
+                opNode *lastBeforeEnd = collateMultNodes();
+                opNode *operationContent;
+                
+                if (lastBeforeEnd == NULL) {
+                    // TODO: Error handling
+                }
+                opStackNode* currOpInStack = stack.top;
+
+                u8 endOp = topImplMultNode()->operation;
+
+                if (currOpInStack->ptr->operation == endOp) {
+                    operationContent = lastBeforeEnd;
+                } else {
+                    currOpInStack->ptr->op2Type = OPNODE_OP;
+                    currOpInStack->ptr->arg2.op = lastBeforeEnd;
+
                     opNode* lastRemaining;
                     while (currOpInStack != NULL) {
-                        if (currOpInStack->ptr->operation == (OP_BRACK_OPEN & 0b11111)) break;
-                        // connect the nodes with each other
+                        if (currOpInStack->ptr->operation == endOp) {
+                            break;
+                        }
+                        // Connect the nodes with each other
                         opStackNode* nextOpInStack = currOpInStack->prev;
-                        if (nextOpInStack == NULL) break;
+                        if (nextOpInStack == NULL) {
+                            break;
+                        }
                         currOpInStack->ptr->parent = nextOpInStack->ptr;
-                        nextOpInStack->ptr->op2 = currOpInStack->ptr;
-                        nextOpInStack->ptr->op2Type = OPNODE_OP;
+                        currOpInStack->ptr->op2Type = OPNODE_OP;
+                        nextOpInStack->ptr->arg2.op = currOpInStack->ptr;
                         lastRemaining = currOpInStack->ptr;
                         node_stack_remove(&stack, currOpInStack);
                         currOpInStack = nextOpInStack;
                     }
-                    currValOp = lastRemaining;
-                    currValType = VALTYPE_OP;
-                    if (currOpInStack != NULL) {
-                        free(currOpInStack->ptr);
-                    }
-                    node_stack_remove(&stack, currOpInStack);
+                    operationContent = lastRemaining;
                 }
+                node_stack_remove(&stack, currOpInStack);
+                opNode *currImplMultNode = topImplMultNode(); // This should now be the opening operation of the block we're looking at
+                currImplMultNode->op1Type = OPNODE_OP;
+                currImplMultNode->arg1.op = operationContent;
+                currImplMultNode->op2Type = OPNODE_CONST;
+                currImplMultNode->arg2.d = 0;
+                switch (currImplMultNode->operation) {
+                    case TERM_BRACKET:
+                        /*printf("before:\n");
+                        debugMultNodes();*/
+                        currImplMult[currImplMultPos] = currImplMult[currImplMultPos]->arg1.op; // Don't actually use the bracket node, but the child node of it
+                        term_free(currImplMultNode, 0);
+                        /*printf("after:\n");
+                        debugMultNodes();*/
+                        //addImplMultNode();
+                        break;
+                    case TERM_SIN:
+                    case TERM_COS:
+                    case TERM_TAN: {
+                        opNode *dummyAdd = term_createOpNode(TERM_PLUS);
+                        dummyAdd->op1Type = OPNODE_OP;
+                        dummyAdd->arg1.op = currImplMultNode;
+                        currImplMultNode->parent = dummyAdd;
+                        dummyAdd->op2Type = OPNODE_CONST;
+                        dummyAdd->arg2.d = 0;
+                        currImplMultNode = dummyAdd;
+                        break;
+                    }
+                }
+                
+                /*if (currImplMult[currImplMultPos]->operation != f.value) {
+                    // error handling
+                    printf("Something went wrong while parsing term! (OPNODE_END)\n");
+                    printf("Expected %d, was %d.\n", f.value, currImplMult[currImplMultPos]->operation);
+                    debugMultNodes();
+                }*/
                 break;
-        }
-        /*printf("Current stack: ");
-        opStackNode* curr = stack.top;
-        char opNameBuf[16];
-        while (curr != NULL) {
-            switch(curr->ptr->operation) {
-                case 0:
-                    strcpy(opNameBuf, "+");
-                    break;
-                case 1:
-                    strcpy(opNameBuf, "-");
-                    break;
-                case 2:
-                    strcpy(opNameBuf, "*");
-                    break;
-                case 3:
-                    strcpy(opNameBuf, "/");
-                    break;
-                case 4:
-                    strcpy(opNameBuf, "(");
-                    break;
-                case 5:
-                    strcpy(opNameBuf, "^");
-                    break;
             }
-            printf("%s ", opNameBuf);
-            curr = curr->prev;
         }
-        printf("\n");*/
         pos++;
     }
-    if (currValType == VALTYPE_OP) {
-        if (stack.top == NULL) {
-            currOp = NULL;
-        } else {
-            currOp = stack.top->ptr;
-            currOp->op2Type = OPNODE_OP;
-            currOp->op2 = currValOp;
-        }
+    opNode *leftSide = collateMultNodes();
+    if (stack.top == NULL) {
+        currOp = NULL;
+    } else {
+        currOp = stack.top->ptr;
+        currOp->op2Type = OPNODE_OP;
+        currOp->arg2.op = leftSide;
     }
     if (currOp == NULL) {
-        currOp = (opNode *) malloc(sizeof(opNode));
-        currOp->operation = OP_PLUS & 0b11111;
-        if (currValType == VALTYPE_NUMBER) {
-            currOp->op1Type = OPNODE_CONST;
-            currOp->val1 = currNum;
-        } else if (currValType == VALTYPE_VAR) {
-            currOp->op1Type = OPNODE_VAR;
-            currOp->val1 = currVar;
-        } else if (currValType == VALTYPE_OP) {
-            currOp->op1Type = OPNODE_OP;
-            currOp->op1 = currValOp;
-        }
-        currOp->op2Type = OPNODE_CONST;
-        currOp->val2 = 0;
-        /*printf("Traversing nodes:\n");
-        print_node(currOp);
-        printf("\n");*/
-        return currOp;
+        // use the constant
+        return leftSide;
+    } else {
+        currOp->op2Type = OPNODE_OP;
+        currOp->arg2.op = leftSide;
     }
-    if (currOp->op2Type == VALTYPE_UNDEF) {
-        if (currValType == VALTYPE_NUMBER) {
-            currOp->op2Type = OPNODE_CONST;
-            currOp->val2 = currNum;
-        } else if (currValType == VALTYPE_VAR) {
-            currOp->op2Type = OPNODE_VAR;
-            currOp->val2 = currVar;
-        } else if (currValType == VALTYPE_OP) {
-            currOp->op2Type = OPNODE_OP;
-            currOp->op2 = currValOp;
-        }
-    }
-    node_stack_pop(&stack); // remove currOp from stack
+    node_stack_pop(&stack); // Remove currOp from stack
     //printf("Nodes remaining on stack: %d\n", node_stack_length(&stack));
     while (!node_stack_is_empty(&stack)) {
         opNode* poppedNode = node_stack_pop(&stack);
         currOp->parent = poppedNode;
-        poppedNode->op2 = currOp;
         poppedNode->op2Type = OPNODE_OP;
+        poppedNode->arg2.op = currOp;
         currOp = poppedNode;
     }
     return currOp;
 }
 
-double evaluate_term(opNode* startNode, double varVal) {
+double term_evaluate(opNode* startNode, double varVal) {
     opNode currNode = *startNode;
     double value1;
-    if (currNode.op1Type == OPNODE_CONST) {
-        value1 = currNode.val1;
-    } else if (currNode.op1Type == OPNODE_VAR) {
-        value1 = varVal;
-    } else {
-        value1 = evaluate_term(currNode.op1, varVal);
+    //term_debugNode(&currNode);
+    switch (currNode.op1Type) {
+        case OPNODE_CONST:
+            value1 = currNode.arg1.d;
+            break;
+        case OPNODE_VAR:
+            //value1 = currNode.arg1.v;
+            value1 = varVal;
+            break;
+        case OPNODE_OP:
+            value1 = term_evaluate(currNode.arg1.op, varVal);
+            break;
     }
     double value2;
-    if (currNode.op2Type == OPNODE_CONST) {
-        value2 = currNode.val2;
-    } else if (currNode.op2Type == OPNODE_VAR) {
-        value2 = varVal;
-    } else {
-        value2 = evaluate_term(currNode.op2, varVal);
+    if (currNode.operation != TERM_SIN) {
+        switch (currNode.op2Type) {
+            case OPNODE_CONST:
+                value2 = currNode.arg2.d;
+                break;
+            case OPNODE_VAR:
+                //value2 = currNode.arg2.v;
+                value2 = varVal;
+                break;
+            case OPNODE_OP:
+                value2 = term_evaluate(currNode.arg2.op, varVal);
+                break;
+        }
     }
     switch (currNode.operation) {
-        case 0:
+        case TERM_PLUS:
             return value1 + value2;
-        case 1:
+        case TERM_MINUS:
             return value1 - value2;
-        case 2:
+        case TERM_MULT:
             return value1 * value2;
-        case 3:
+        case TERM_DIV:
             return value1 / value2;
-        case 5:
+        case TERM_POW:
             return pow(value1, value2);
+        case TERM_SIN:
+            return sin(value1);
     }
 }
 
@@ -437,77 +452,87 @@ symbolField getFields(u8 symbol) {
     return res;
 }
 
-void print_char_console(u8 input) {
-    if (getFields(input).type == OPTYPE_CONST) {
-        printf("%d", input);
-    } else if (getFields(input).type == OPTYPE_SIMPLE) {
-        char opNameBuf[16];
-        switch(getFields(input).value) {
-            case 0:
-                strcpy(opNameBuf, "+");
-                break;
-            case 1:
-                strcpy(opNameBuf, "-");
-                break;
-            case 2:
-                strcpy(opNameBuf, "*");
-                break;
-            case 3:
-                strcpy(opNameBuf, "/");
-                break;
-            case 5:
-                strcpy(opNameBuf, "^");
-                break;
-        }
-        printf("%s", opNameBuf);
-    } else if (getFields(input).type == OPTYPE_VAR) {
-        char varNameBuf[16];
-        switch(getFields(input).value) {
-            case 0:
-                strcpy(varNameBuf, "x");
-                break;
-            case 1:
-                strcpy(varNameBuf, "y");
-                break;
-            case 2:
-                strcpy(varNameBuf, "z");
-                break;
-        }
-        printf("%s", varNameBuf);
-    } else if (getFields(input).type == OPTYPE_BEGIN) {
-        char varNameBuf[16];
-        switch(getFields(input).value) {
-            case 4:
-                strcpy(varNameBuf, "(");
-                break;
-        }
-        printf("%s", varNameBuf);
-    } else if (getFields(input).type == OPTYPE_END) {
-        char varNameBuf[16];
-        switch(getFields(input).value) {
-            case 4:
-                strcpy(varNameBuf, ")");
-                break;
-        }
-        printf("%s", varNameBuf);
+// Debug functions
+
+void term_debugNode(opNode *node) {
+    switch (node->op1Type) {
+        case OPNODE_CONST:
+            printf("|%f", node->arg1.d);
+            break;
+        case OPNODE_VAR:
+            printf("|var_%d", node->arg1.v);
+            break;
+        case OPNODE_OP:
+            printf("|(op 0x%08x)", (u32) node->arg1.op);
+            break;
+    }
+    printf("|(operator %d)", node->operation);
+    switch (node->op2Type) {
+        case OPNODE_CONST:
+            printf("|%f", node->arg2.d);
+            break;
+        case OPNODE_VAR:
+            printf("|var_%d", node->arg2.v);
+            break;
+        case OPNODE_OP:
+            printf("|(op 0x%08x)", (u32) node->arg2.op);
+            break;
+    }
+    printf("|");
+}
+
+void debugMultNodes() {
+    for (int i = 0; i < currImplMultPos + 1; i++) {
+        term_debugNode(currImplMult[i]);
+        printf(", ");
     }
 }
 
-/*int main(int argc, char** argv) {
-    int i = 0;
-    while (input[i] != CHAR_END) {
-        print_char_console(input[i]);
-        i++;
+void term_print_node(opNode* n) {
+    char opNameBuf[16];
+    switch(n->operation) {
+        case TERM_PLUS:
+            strcpy(opNameBuf, "plus");
+            break;
+        case TERM_MINUS:
+            strcpy(opNameBuf, "minus");
+            break;
+        case TERM_MULT:
+            strcpy(opNameBuf, "mult");
+            break;
+        case TERM_DIV:
+            strcpy(opNameBuf, "div");
+            break;
+        case TERM_POW:
+            strcpy(opNameBuf, "pow");
+            break;
+        case TERM_SIN:
+            strcpy(opNameBuf, "sin");
+            break;
     }
-    printf("\n");
-    int syntaxErrRes = term_checkSyntax(input);
-    if (syntaxErrRes > -1) {
-        printf("Syntax error at %d\n", syntaxErrRes);
+    printf("%s(", opNameBuf);
+    switch (n->op1Type) {
+        case OPNODE_CONST:
+            printf("%g", n->arg1.d);
+            break;
+        case OPNODE_VAR:
+            printf("var_%d", n->arg1.v);
+            break;
+        case OPNODE_OP:
+            if (n->arg1.op != NULL) term_print_node(n->arg1.op);
+            break;
     }
-    opNode* term = parse_term(input);
-    printf("Traversing nodes:\n");
-    print_node(term);
-    printf("\n");
-    printf("res = %f\n", evaluate_term(term, 0.3));
-    term_free(term);
-}*/
+    printf(", ");
+    switch (n->op2Type) {
+        case OPNODE_CONST:
+            printf("%g", n->arg2.d);
+            break;
+        case OPNODE_VAR:
+            printf("var_%d", n->arg2.v);
+            break;
+        case OPNODE_OP:
+            if (n->arg2.op != NULL) term_print_node(n->arg2.op);
+            break;
+    }
+    printf(")");
+}
