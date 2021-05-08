@@ -8,6 +8,7 @@ int evalterm(u8 *input, double varVal, double *out) {
         return syntaxErrRes;
     }
     opNode* term = term_parse(input);
+    printf("  ");
     term_print_node(term);
     printf("\n");
     *out = term_evaluate(term, varVal);
@@ -55,7 +56,7 @@ void doTests(testParams *inputs, int count) {
             continue;
         }
         if (syntaxError == -1) {
-            if (abs(res - inputs[i].returnVal) > 1e-9) {
+            if (fabs(res - inputs[i].returnVal) > 1e-7) {
                 failEquality(i, inputs[i].disp, res, inputs[i].returnVal);
                 continue;
             }

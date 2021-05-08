@@ -357,7 +357,7 @@ opNode* term_parse(u8 *input) {
                         currImplMultNode->parent = dummyAdd;
                         dummyAdd->op2Type = OPNODE_CONST;
                         dummyAdd->arg2.d = 0;
-                        currImplMultNode = dummyAdd;
+                        currImplMult[currImplMultPos] = dummyAdd;
                         break;
                     }
                 }
@@ -383,21 +383,48 @@ opNode* term_parse(u8 *input) {
     }
     if (currOp == NULL) {
         // use the constant
-        return leftSide;
+        currOp = leftSide;
     } else {
         currOp->op2Type = OPNODE_OP;
         currOp->arg2.op = leftSide;
+        node_stack_pop(&stack); // Remove currOp from stack
+        //printf("Nodes remaining on stack: %d\n", node_stack_length(&stack));
+        while (!node_stack_is_empty(&stack)) {
+            opNode* poppedNode = node_stack_pop(&stack);
+            currOp->parent = poppedNode;
+            poppedNode->op2Type = OPNODE_OP;
+            poppedNode->arg2.op = currOp;
+            currOp = poppedNode;
+        }
     }
-    node_stack_pop(&stack); // Remove currOp from stack
-    //printf("Nodes remaining on stack: %d\n", node_stack_length(&stack));
-    while (!node_stack_is_empty(&stack)) {
-        opNode* poppedNode = node_stack_pop(&stack);
-        currOp->parent = poppedNode;
-        poppedNode->op2Type = OPNODE_OP;
-        poppedNode->arg2.op = currOp;
-        currOp = poppedNode;
-    }
+    term_simplify(currOp);
     return currOp;
+}
+
+void term_simplify(opNode *currNode) {
+    if (currNode->op1Type == OPNODE_OP) term_simplify(currNode->arg1.op);
+    if (currNode->op2Type == OPNODE_OP) term_simplify(currNode->arg2.op);
+
+    if (currNode->op1Type == OPNODE_OP) {
+        opNode *op = currNode->arg1.op;
+        int isPlusElementary = (op->operation == TERM_PLUS && op->op2Type == OPNODE_CONST && op->arg2.d == 0);
+        int isMultElementary = (op->operation == TERM_MULT && op->op2Type == OPNODE_CONST && op->arg2.d == 1);
+        if (isPlusElementary || isMultElementary) {
+            currNode->op1Type = op->op1Type;
+            currNode->arg1 = op->arg1;
+            term_free(op, 0);
+        }
+    }
+    if (currNode->op2Type == OPNODE_OP) {
+        opNode *op = currNode->arg2.op;
+        int isPlusElementary = (op->operation == TERM_PLUS && op->op2Type == OPNODE_CONST && op->arg2.d == 0);
+        int isMultElementary = (op->operation == TERM_MULT && op->op2Type == OPNODE_CONST && op->arg2.d == 1);
+        if (isPlusElementary || isMultElementary) {
+            currNode->op2Type = op->op1Type;
+            currNode->arg2 = op->arg1;
+            term_free(op, 0);
+        }
+    }
 }
 
 double term_evaluate(opNode* startNode, double varVal) {

@@ -100,21 +100,19 @@
 
 typedef struct opNode opNode;
 
+typedef union {
+    double d;
+    int v;
+    opNode* op;
+} termArg;
+
 struct opNode {
     u8 operation;
     opNode* parent;
     int op1Type;
     int op2Type;
-    union {
-        double d;
-        int v;
-        opNode* op;
-    } arg1;
-    union {
-        double d;
-        int v;
-        opNode* op;
-    } arg2;
+    termArg arg1;
+    termArg arg2;
 };
 
 typedef struct opStackNode opStackNode;
@@ -145,6 +143,7 @@ void term_free(opNode *, int);
 int term_checkSyntax(u8 *);
 void term_print_node(opNode *);
 opNode *term_parse(u8 *);
+void term_simplify(opNode *);
 double term_evaluate(opNode *, double);
 symbolField getFields(u8);
 void print_char_console(u8);
