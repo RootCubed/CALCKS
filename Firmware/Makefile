@@ -7,7 +7,7 @@ LDFLAGS = -lm -lpthread
 
 ifeq ($(OS), Windows_NT)
 	SHELL=cmd
-	PORT=COM4
+	PORT=COM3
 	LDFLAGS = -lm
 endif
 
@@ -51,6 +51,9 @@ eeprom: server/eepromdata.bin
 
 upload: avr
 	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i -B8
+
+test: pre-console test_term/test_term.o common/term.o
+	$(CC) -g -o test_term/test_term term.o test_term.o $(LDFLAGS)
 
 clean:
 	rm *.o
