@@ -2,13 +2,13 @@
 #include <stdio.h>
 
 const char BUTTON_MAP[35] = {
-    off,        -1,    zero,         point,          enter,
-	variable,   one,   two,          three,          plus,
-	-1,         four,  five,         six,            minus,
-	-1,         seven, eight,        nine,           multiply,
-	exponent,   -1,    bracket_open, bracket_close,  divide,
-    -1,         -1,    -1,           -1,             del,
-    f1,         f2,    f3,           f4,
+    off,        -1,      zero,         point,          enter,
+	variable,   one,     two,          three,          plus,
+	-1,         four,    five,         six,            minus,
+	-1,         seven,   eight,        nine,           multiply,
+	exponent,   -1,      bracket_open, bracket_close,  divide,
+    -1,         btn_sin, btn_cos,      btn_tan,        del,
+    f1,         f2,      f3,           f4,
 	back
 };
 

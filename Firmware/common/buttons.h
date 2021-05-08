@@ -36,7 +36,8 @@ typedef enum buttons {
     exponent,
     point,
     up, down, left, right,
-    del
+    del,
+    btn_sin, btn_cos, btn_tan
 } buttons;
 
 
