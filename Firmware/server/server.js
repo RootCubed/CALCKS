@@ -11,14 +11,17 @@ let runningCalcs = {};
 io.on("connection", socket => {
     runningCalcs[socket.id] = [spawn(__dirname + "/calc.exe", {encoding: "binary"}), Buffer.alloc(128 * 8), undefined];
     let userCalc = runningCalcs[socket.id][0];
-    let userCalcBuf = runningCalcs[socket.id][1];
     userCalc.stdout.on("data", data => {
-        socket.emit("screen", data);
+        try {
+            socket.emit("screen", data);
+        } catch(e) {}
     });
     
     userCalc.stderr.on("data", data => {
         console.log(`stderr: ${data}`);
-        socket.emit("error", data);
+        try {
+            socket.emit("error", data);
+        } catch(e) {}
     });
     
     userCalc.on("error", (error) => {
@@ -26,39 +29,37 @@ io.on("connection", socket => {
     });
 
     userCalc.on("close", function (data) {
-        socket.emit("crash", data);
-        clearInterval(runningCalcs[socket.id][2]);
-        userCalc.kill();
-        runningCalcs[socket.id] = undefined;
+        try {
+            socket.emit("crash", data);
+            clearInterval(runningCalcs[socket.id][2]);
+            userCalc.kill();
+            runningCalcs[socket.id] = undefined;
+        } catch(e) {}
     })
 
     runningCalcs[socket.id][2] = setInterval(() => {
         userCalc.stdin.write('g');
     }, 200);
 
-    socket.on("button", socket => {
-        if (socket != undefined) {
-            console.log("button", socket, "was pressed!");
+    socket.on("button", btn => {
+        if (btn != undefined) {
             userCalc.stdin.write('b');
-            userCalc.stdin.write(socket.toString());
+            userCalc.stdin.write(btn.toString());
         }
     });
 
-    
-    socket.on("specialbutton", socket => {
-        if (socket != undefined) {
-            console.log("specialbutton", socket, "was pressed!");
+    socket.on("specialbutton", btn => {
+        if (btn != undefined) {
             userCalc.stdin.write('s');
-            userCalc.stdin.write(socket.toString());
+            userCalc.stdin.write(btn.toString());
         }
     });
-});
 
-io.on("disconnect", socket => {
-    let userCalc = runningCalcs[socket.id][0];
-    userCalc.stdin.pause();
-    userCalc.kill();
-    runningCalcs[socket.id] = undefined;
+    socket.on("disconnect", () => {
+        clearInterval(runningCalcs[socket.id][2]);
+        userCalc.stdin.pause();
+        userCalc.kill();
+    });
 });
 
 app.use(function(req, res, next) {
