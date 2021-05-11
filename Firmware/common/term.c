@@ -107,7 +107,7 @@ int term_checkSyntax(u8 *input) {
             hasHadComma = 1;
         }
         if (f.type == OPTYPE_SIMPLE) {
-            if (isLastInput || (fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_VAR && input[i + 1] != TERM_OP_BRACK_OPEN)) return i + 1;
+            if (isLastInput || (fNext.type != OPTYPE_CONST && fNext.type != OPTYPE_VAR && fNext.type != OPTYPE_BEGIN)) return i + 1;
         }
         if (f.type == OPTYPE_BEGIN) {
             switch (input[i]) {
@@ -184,7 +184,6 @@ opNode *collateMultNodes() {
         newNode->op2Type = OPNODE_CONST;
         newNode->arg2.d = 1;
 
-        newNode->parent = currNode;
         currNode->op2Type = OPNODE_OP;
         currNode->arg2.op = newNode;
 
@@ -258,7 +257,6 @@ opNode* term_parse(u8 *input) {
                 // Set op1 in case of empty stack, or if the current operator has higher precedence than the previous one
                 currOp->op1Type = OPNODE_OP;
                 currOp->arg1.op = leftSide;
-                leftSide->parent = currOp;
                 if (!node_stack_is_empty(&stack)) {
                     int currOpPre = precedences[currOp->operation];
                     if (currOpPre > precedences[stack.top->ptr->operation]) {
@@ -270,13 +268,11 @@ opNode* term_parse(u8 *input) {
                             currOpInStack = currOpInStack->prev;
                         }
                         // Connect currOp to that node
-                        currOpInStack->ptr->parent = currOp;
                         currOp->op1Type = OPNODE_OP;
                         currOp->arg1.op = currOpInStack->ptr;
                         // Now, while traversing the stack upwards, connect the nodes with each other
                         while (currOpInStack->next != NULL) {
                             opStackNode* nextOpInStack = currOpInStack->next;
-                            nextOpInStack->ptr->parent = currOpInStack->ptr;
                             currOpInStack->ptr->op2Type = OPNODE_OP;
                             currOpInStack->ptr->arg2.op = nextOpInStack->ptr;
                             node_stack_remove(&stack, currOpInStack);
@@ -285,7 +281,6 @@ opNode* term_parse(u8 *input) {
                         // Finally, add op2 on the last operation in the stack
                         currOpInStack->ptr->op2Type = OPNODE_OP;
                         currOpInStack->ptr->arg2.op = leftSide;
-                        leftSide->parent = currOpInStack->ptr;
                         node_stack_remove(&stack, currOpInStack);
                     }
                 }
@@ -323,7 +318,6 @@ opNode* term_parse(u8 *input) {
                         if (nextOpInStack == NULL) {
                             break;
                         }
-                        currOpInStack->ptr->parent = nextOpInStack->ptr;
                         currOpInStack->ptr->op2Type = OPNODE_OP;
                         nextOpInStack->ptr->arg2.op = currOpInStack->ptr;
                         lastRemaining = currOpInStack->ptr;
@@ -340,13 +334,8 @@ opNode* term_parse(u8 *input) {
                 currImplMultNode->arg2.d = 0;
                 switch (currImplMultNode->operation) {
                     case TERM_BRACKET:
-                        /*printf("before:\n");
-                        debugMultNodes();*/
                         currImplMult[currImplMultPos] = currImplMult[currImplMultPos]->arg1.op; // Don't actually use the bracket node, but the child node of it
                         term_free(currImplMultNode, 0);
-                        /*printf("after:\n");
-                        debugMultNodes();*/
-                        //addImplMultNode();
                         break;
                     case TERM_SIN:
                     case TERM_COS:
@@ -354,20 +343,12 @@ opNode* term_parse(u8 *input) {
                         opNode *dummyAdd = term_createOpNode(TERM_PLUS);
                         dummyAdd->op1Type = OPNODE_OP;
                         dummyAdd->arg1.op = currImplMultNode;
-                        currImplMultNode->parent = dummyAdd;
                         dummyAdd->op2Type = OPNODE_CONST;
                         dummyAdd->arg2.d = 0;
                         currImplMult[currImplMultPos] = dummyAdd;
                         break;
                     }
                 }
-                
-                /*if (currImplMult[currImplMultPos]->operation != f.value) {
-                    // error handling
-                    printf("Something went wrong while parsing term! (OPNODE_END)\n");
-                    printf("Expected %d, was %d.\n", f.value, currImplMult[currImplMultPos]->operation);
-                    debugMultNodes();
-                }*/
                 break;
             }
         }
@@ -391,7 +372,6 @@ opNode* term_parse(u8 *input) {
         //printf("Nodes remaining on stack: %d\n", node_stack_length(&stack));
         while (!node_stack_is_empty(&stack)) {
             opNode* poppedNode = node_stack_pop(&stack);
-            currOp->parent = poppedNode;
             poppedNode->op2Type = OPNODE_OP;
             poppedNode->arg2.op = currOp;
             currOp = poppedNode;
@@ -471,6 +451,10 @@ double term_evaluate(opNode* startNode, double varVal) {
             return pow(value1, value2);
         case TERM_SIN:
             return sin(value1);
+        case TERM_COS:
+            return cos(value1);
+        case TERM_TAN:
+            return tan(value1);
     }
 }
 
@@ -535,6 +519,15 @@ void term_print_node(opNode* n) {
             break;
         case TERM_SIN:
             strcpy(opNameBuf, "sin");
+            break;
+        case TERM_COS:
+            strcpy(opNameBuf, "cos");
+            break;
+        case TERM_TAN:
+            strcpy(opNameBuf, "tan");
+            break;
+        default:
+            strcpy(opNameBuf, "invalid_op");
             break;
     }
     printf("%s(", opNameBuf);

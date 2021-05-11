@@ -108,7 +108,6 @@ typedef union {
 
 struct opNode {
     u8 operation;
-    opNode* parent;
     int op1Type;
     int op2Type;
     termArg arg1;
