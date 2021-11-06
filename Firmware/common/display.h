@@ -53,7 +53,7 @@ void disp_sendByte(char);
 void disp_show();
 
 #ifdef console
-    void disp_print();
+    void get_disp(unsigned char *);
 #endif
 
 static const char disp_initSequence[DISP_INIT_LEN] = {

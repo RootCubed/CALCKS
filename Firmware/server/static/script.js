@@ -1,10 +1,32 @@
-const socket = io();
-
 let canvas = document.querySelector("canvas");
 let ctx = canvas.getContext("2d");
 
-socket.on("screen", data => {
-    let scrBuf = new Uint8Array(data);
+let getScreen, screenTick, pressButton;
+function waitForWasmInit() {
+    if (!runtimeInitialized) {
+        setTimeout(waitForWasmInit, 10);
+        return;
+    };
+
+    let screen = Module._malloc(128*8);
+    let tmpWrap = Module.cwrap("get_screen", "void", ["number"]);
+    
+    getScreen = () => {
+        tmpWrap(screen);
+        return Module.HEAPU8.subarray(screen, screen + 128*8);
+    }
+    screenTick = Module.cwrap("screen_tick", "void", []);
+
+    pressButton = Module.cwrap("press_button", "void", ["number"]);
+
+    setInterval(dispScreen, 50);
+}
+
+setTimeout(waitForWasmInit, 10);
+
+let firstDisplay = true;
+function dispScreen() {
+    let scrBuf = new Uint8Array(getScreen());
     let index = 0;
     for (let page = 0; page < 8; page++) {
         for (let x = 0; x < 128; x++) {
@@ -15,15 +37,16 @@ socket.on("screen", data => {
             index++;
         }
     }
-});
 
-socket.on("crash", data => {
-    console.log(data);
-    let canvas = document.querySelector("canvas");
-    let ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#000000";
-    ctx.fillText("You crashed me :(", 20, 32);
-});
+    if (firstDisplay) {
+        setTimeout(() => firstDisplay = false, 2000);
+        return;
+    }
+    
+    for (let i = 0; i < 10; i++) {
+        screenTick();
+    }
+}
 
 const charTable = {
     13: 4,
