@@ -58,18 +58,29 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+    
+    	img {
+   			width: 30%;
+    	}
+    
+		@media only screen and (max-width: 500px) {
+			img {
+                width: 100%;
+    			display: block;
+			}
+		}
     </style>
 </head>
 <body>
-    <h1>CALCKS - Das Maturprojekt von Liam Braun</h1>
+    <h1>CALCKS - My matura project</h1>
     <h2>Links</h2>
     <ul>
-        <li><a href="https://parginli.ch/maturprojekt">Offline-Version (hat noch ein Video der Hardware)</a></li>
-        <li><a href="https://github.com/LetsPlentendo-CH/CALCKS">GitHub-Repository</a></li>
+        <li><a href="https://parginli.ch/maturprojekt">Offline-Version (with a video of a prototype of the calculator)</a></li>
+        <li><a href="https://github.com/LetsPlentendo-CH/CALCKS">GitHub repository</a></li>
+        <li><a href="paper_german.pdf">The paper (it's in German, maybe I'll translate it at some point if I'm bored)</a></li>
     </ul>
-    <h2>Online-Demo</h2>
-    <p>Der Code, der hier läuft, wurde für Windows mit fast denselben Quelldateien wie für das Hardwareprodukt kompiliert und wird auf dem Server ausgeführt und wird somit immer auf dem gleichen Stand sein wie der eigentliche Taschenrechner.
-        Der einzige Unterschied ist die Kommunikation mit den Hardwareschnittstellen (Display & Knöpfe).</p>
+    <h2>Online demo</h2>
+    <p>This online version was compiled from the same codebase as for the hardware version, with the exception of I/O functionality (the display and buttons).</p>
     <div id="calcEmu">
         <canvas id="calculator" width="128" height="64"></canvas>
         <table id="buttons_fn">
@@ -85,14 +96,14 @@
         <table id="buttons_arrows">
             <tbody>
                 <tr>
-                    <td colspan="2"><button onclick='socket.emit("specialbutton", 0b00001000);'>🡑</button></td>
+                    <td colspan="2"><button onclick='socket.emit("specialbutton", 0b00001000);'>&uarr;</button></td>
                 </tr>
                 <tr>
-                    <td><button onclick='socket.emit("specialbutton", 0b00010000);'>🡐</button></td>
-                    <td><button onclick='socket.emit("specialbutton", 0b00100000);'>🡒</button></td>
+                    <td><button onclick='socket.emit("specialbutton", 0b00010000);'>&larr;</button></td>
+                    <td><button onclick='socket.emit("specialbutton", 0b00100000);'>&rarr;</button></td>
                 </tr>
                 <tr>
-                    <td colspan="2"><button onclick='socket.emit("specialbutton", 0b01000000);'>🡓</button></td>
+                    <td colspan="2"><button onclick='socket.emit("specialbutton", 0b01000000);'>&darr;</button></td>
                 </tr>
             </tbody>
         </table>
@@ -147,6 +158,13 @@
             </tbody>
         </table>
     </div>
+
+    <h2>Images</h2>
+	<p>Here are a few images of the final product.</p>
+	<img src="calc_img1.jpg">
+	<img src="calc_img2.jpg">
+	<img src="calc_img3.jpg">
+	
     <script src="script.js"></script>
 </body>
 </html>
