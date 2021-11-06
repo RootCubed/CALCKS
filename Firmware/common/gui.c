@@ -159,7 +159,7 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
     return (i - 1) * fonts[font][2];
 }
 
-void gui_draw_image(char buffer[1024]) {
+void gui_draw_image(unsigned char buffer[1024]) {
     for (int page = 7; page >= 0; page--) {
         disp_setPage(page);
         disp_setXPos(0);

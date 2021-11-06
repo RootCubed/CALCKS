@@ -15,7 +15,7 @@ typedef struct {
     int maxChars;
     int posX;
     int posY;
-    char *buffer;
+    unsigned char *buffer;
     int cursor;
     int scroll;
     int length;

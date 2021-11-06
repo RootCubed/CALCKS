@@ -7,7 +7,7 @@
 	#include <fcntl.h>
 #endif
 
-char buffer[128*8];
+unsigned char buffer[128*8];
 int page = 0;
 int xPos = 0;
 
@@ -56,10 +56,6 @@ void disp_command(char cmd) {
 	}
 }
 
-void disp_print() {
-	fwrite(buffer, 1, 128 * 8, stdout);
-	/*for (int i = 0; i < 128 * 8; i++) {
-		printf("%02x", buffer[i]);
-	}*/
-	fflush(stdout);
+void get_disp(unsigned char *out) {
+	memcpy(out, buffer, 128*8);
 }
