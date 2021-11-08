@@ -28,12 +28,13 @@ void graph_updateScreen() {
     double rangeY2 = -10;
     if (!graph_hasDrawn) {
         disp_clear();
-        if (graphInput->buffer[0] != CHAR_END) {
-            double transfX0 = map(0, rangeX1, rangeX2, 0, SCREEN_WIDTH);
-            double transfY0 = map(0, rangeY1, rangeY2, 0, 64);
-            gui_draw_line(transfX0, 0, transfX0, SCREEN_HEIGHT);
-            gui_draw_line(0, transfY0, SCREEN_WIDTH, transfY0);
-            if (!graph_shouldPlot) goto dontPlot;
+
+        double transfX0 = map(0, rangeX1, rangeX2, 0, SCREEN_WIDTH);
+        double transfY0 = map(0, rangeY1, rangeY2, 0, 64);
+        gui_draw_line(transfX0, 0, transfX0, SCREEN_HEIGHT);
+        gui_draw_line(0, transfY0, SCREEN_WIDTH, transfY0);
+
+        if (graph_shouldPlot && graphInput->buffer[0] != CHAR_END) {
             opNode *graphTerm = term_parse(graphInput->buffer);
             double prevRes = INFINITY;
             for (double x = 0; x < SCREEN_WIDTH; x += 0.1) {
@@ -51,9 +52,6 @@ void graph_updateScreen() {
             term_free(graphTerm, 1);
             graph_shouldPlot = 0;
             mathinput_clear(graphInput);
-
-            dontPlot:
-            graph_hasDrawn = 1;
         }
 
         int fontHeight = fonts[FNT_SM][FNT_HEIGHT];
@@ -61,12 +59,15 @@ void graph_updateScreen() {
         gui_draw_string("f(x)=", 0, SCREEN_HEIGHT - fontHeight, FNT_SM, 0);
         mathinput_redraw(graphInput);
         mathinput_setCursor(graphInput, CURSOR_ON);
+        
+        graph_hasDrawn = 1;
     }
     mathinput_cursorFrame(graphInput);
 }
 
 void graph_reset_state() {
     graph_hasDrawn = 0;
+    graph_shouldPlot = 0;
     mathinput_clear(graphInput);
 }
 

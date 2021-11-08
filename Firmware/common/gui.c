@@ -7,7 +7,7 @@ const int fonts[2][4] = {
 };
 
 void gui_draw_byte(char bt, int x, int y) {
-    if (x < 0 || x > 128 || y < 0 || y > 64) return;
+    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) return;
 
     int offset = y % 8;
 
@@ -26,7 +26,7 @@ void gui_draw_byte(char bt, int x, int y) {
 }
 
 void gui_update_byte(char bt, int x, int y) {
-    if (x < 0 || x > 128 || y < 0 || y > 64) return;
+    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) return;
 
     int offset = y % 8;
 
@@ -41,7 +41,7 @@ void gui_update_byte(char bt, int x, int y) {
 }
 
 void gui_remove_byte(char bt, int x, int y) {
-    if (x < 0 || x > 128 || y < 0 || y > 64) return;
+    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) return;
 
     int offset = y % 8;
 
@@ -208,8 +208,9 @@ void gui_draw_line(int x1, int y1, int x2, int y2) {
     int diffY = y2 - y1;
     double q = (double) diffY / diffX;
     for (double cX = x1; cX <= x2; cX += 0.1) {
-        if (round(cX) < 0 || round(cX) > 128 || y1 + round(q * (cX - x1)) < 0 || y1 + round(q * (cX - x1)) > 64) continue;
-        gui_update_byte(0x01, round(cX), y1 + round(q * (cX - x1)));
+        double cY = round(q * (cX - x1));
+        if (round(cX) < 0 || round(cX) >= SCREEN_WIDTH || y1 + cY < 0 || y1 + cY >= SCREEN_HEIGHT) continue;
+        gui_update_byte(0x01, round(cX), y1 + cY);
     }
 }
 
