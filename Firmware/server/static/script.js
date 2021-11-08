@@ -49,22 +49,22 @@ function dispScreen() {
 }
 
 const charTable = {
-    13: 4,
-    46: 3,
-    48: 2,
-    49: 6,
-    50: 7,
-    51: 8,
-    52: 11,
-    53: 12,
-    54: 13,
-    55: 16,
-    56: 17,
-    57: 18,
+    "Enter": 4,
+    ".": 3,
+    0: 2,
+    1: 6,
+    2: 7,
+    3: 8,
+    4: 11,
+    5: 12,
+    6: 13,
+    7: 16,
+    8: 17,
+    9: 18,
 };
 
 document.addEventListener("keypress", ev => {
-    if (charTable[ev.charCode]) {
-        socket.emit("button", charTable[ev.charCode]);
+    if (charTable[ev.key]) {
+        pressButton(charTable[ev.key], false);
     }
 });
