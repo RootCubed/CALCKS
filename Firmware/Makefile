@@ -13,15 +13,17 @@ ifeq ($(OS), Windows_NT)
 	LDFLAGS = -lm
 endif
 
-avr-files = avr/buttons.o avr/display.o avr/eep.o
 common-files = common/*.h
 common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o
-console-files = console/buttons.o console/display.o console/eep.o
+avr-obj = avr/buttons.o avr/display.o avr/eep.o
+console-obj = console/buttons.o console/display.o console/eep.o
+
+.PHONY: eeprom pre-avr pre-console avr console eeprom upload test
 
 default: eeprom upload
 
 %.o: %.c
-	$(CC) -c $^ $(CCFLAGS)
+	$(CC) -c $^ -o $@ $(CCFLAGS)
 
 pre-avr:
 	$(eval CC = avr-gcc)
@@ -33,15 +35,15 @@ pre-console:
 	$(eval CC = emcc)
 	$(eval CCFLAGS = -O0 -Dconsole -fPIC)
 
-avr: pre-avr main.o $(avr-files) $(common-obj)
-	$(CC) main.o $(subst avr/,,$(avr-files)) $(subst common/,,$(common-obj)) $(CCFLAGS) $(LDFLAGS) -o main.elf
+avr: pre-avr main.o $(avr-obj) $(common-obj)
+	$(CC) main.o $(avr-obj) $(common-obj) $(CCFLAGS) $(LDFLAGS) -o main.elf
 	$(OBJCOPY) -O ihex main.elf main.hex
 	
-console: pre-console main.o $(console-files) $(common-obj) eepromdata.bin
-	$(CC) -o server/static/calc.js main.o $(subst console/,,$(console-files)) $(subst common/,,$(common-obj)) $(LDFLAGS) $(EMCCFLAGS)
+console: pre-console main.o $(console-obj) $(common-obj) eepromdata.bin
+	$(CC) -o server/static/calc.js main.o $(console-obj) $(common-obj) $(LDFLAGS) $(EMCCFLAGS)
 
 eepromprog.hex: pre-avr eepromprog.o $(avr-files)
-	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
+	$(CC) eepromprog.o $(CCFLAGS) $(avr-obj) -o eepromprog.elf
 	$(OBJCOPY) -O ihex eepromprog.elf eepromprog.hex
 
 eepromdata.bin: eepromgen/*.png
@@ -57,6 +59,10 @@ test: pre-console test_term/test_term.o common/term.o
 	$(CC) -g -o test_term/test_term term.o test_term.o $(LDFLAGS)
 
 clean:
-	rm *.o
-	rm *.elf
-	rm *.hex
+	-rm main.o
+	-rm $(avr-obj)
+	-rm $(console-obj)
+	-rm $(common-obj)
+	-rm *.elf
+	-rm *.hex
+	-rm *.bin

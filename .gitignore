@@ -1,7 +1,9 @@
 .vscode/
 Firmware/.vs
-Firmware/*/Debug
 Firmware/*.o
+Firmware/avr/*.o
+Firmware/console/*.o
+Firmware/common/*.o
 Firmware/*.map
 Firmware/*.hex
 Firmware/*.elf
