@@ -33,6 +33,9 @@
 #define CHAR_ARROW_DOWN 76
 #define CHAR_ARROW_RIGHT 77
 #define CHAR_ARROW_LEFT 78
+#define CHAR_DOLLAR 79
+#define CHAR_COMMA 80
+#define CHAR_QUESTION_MARK 81
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
