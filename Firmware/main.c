@@ -20,34 +20,18 @@
 
 #ifdef console
 
-#ifdef _WIN32
-	#include <windows.h>
-	#define _delay_ms Sleep
-	DWORD WINAPI ConsoleListener(void* data) {
-#else
-	#include <unistd.h>
-	#include <pthread.h>
-	#define _delay_ms(a) sleep(a / 1000.0)
-	void *ConsoleListener(void *vargp) {
-#endif
-		while (1) {
-			char code = getchar();
-			if (code == 'g') {
-				disp_print();
-			}
-			if (code == 'b') {
-				char button;
-				scanf("%d", &button);
-				set_button(button);
-			}
-			if (code == 's') {
-				char button;
-				scanf("%d", &button);
-				set_special_button(button);
-			}
-		}
-		return 0;
+void press_button(unsigned char btn, int special) {
+	if (special) {
+		set_special_button(btn);
+	} else {
+		set_button(btn);
 	}
+}
+
+void get_screen(unsigned char *buf) {
+	get_disp(buf);
+}
+
 #else
 	#include <avr/io.h>
 	#include <util/delay.h>
@@ -61,7 +45,6 @@
 #define BTN_DOWN 0b01000000
 #define BTN_RIGHT 0b00100000
 
-char resBuf[0x20];
 int lastButton = -1;
 int lastSpecialButtonState = 0xFFFF;
 opNode *termTree;
@@ -89,6 +72,8 @@ void infoScreen_battery();
 
 void errorScreen(char *);
 
+void screen_tick();
+
 #ifndef console
 // https://stackoverflow.com/questions/32802221/how-to-write-a-custom-reset-function-in-c-for-avr-studio
 
@@ -113,14 +98,6 @@ int freeRam() {
 #endif
 
 int main(void) {
-	#ifdef console
-	#ifdef _WIN32
-		CreateThread(NULL, 0, ConsoleListener, NULL, 0, NULL);
-	#else
-		pthread_t thread_id;
-		pthread_create(&thread_id, NULL, ConsoleListener, NULL);
-	#endif
-	#endif
 	buttons_initialize();
 	disp_initialize();
 	eep_initialize();
@@ -129,9 +106,6 @@ int main(void) {
 	eep_read_block(&disp_eeprom_buf, EEPROM_STARTUP, EEPROM_STARTUP_LEN);
 	gui_draw_image(disp_eeprom_buf);
 	
-	_delay_ms(2000);
-	
-	disp_clear();
 	buttons_initialize();
 
 	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
@@ -152,159 +126,170 @@ int main(void) {
 	
 	noInputTimeout = 0;
 
+	#ifndef console
+
+	_delay_ms(2000);
+	disp_clear();
+
 	while (1) {
-		char specialButtons = buttons_get_special();
-		if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
-			noInputTimeout = 0;
-			buttonPressed(btn_up);
-		}
-		if ((lastSpecialButtonState & BTN_DOWN) && !(specialButtons & BTN_DOWN)) {
-			noInputTimeout = 0;
-			buttonPressed(btn_down);
-		}
-		if ((lastSpecialButtonState & BTN_LEFT) && !(specialButtons & BTN_LEFT)) {
-			noInputTimeout = 0;
-			buttonPressed(btn_left);
-		}
-		if ((lastSpecialButtonState & BTN_RIGHT) && !(specialButtons & BTN_RIGHT)) {
-			noInputTimeout = 0;
-			buttonPressed(btn_right);
-		}
-		lastSpecialButtonState = specialButtons;
-		int btnUnmapped = buttons_getPressed();
-		int currButton = -1;
-		if (btnUnmapped > -1) {
-			noInputTimeout = 0;
-			currButton = BUTTON_MAP[btnUnmapped];
-		}
-		if (currButton != -1) {
-			if (currButton != lastButton) {
-				lastButton = currButton;
-				buttonPressed(currButton);
-			}
-		} else {
-			lastButton = -1;
-		}
+		screenTick();
 
-		switch (currMode) {
-			case m_calc:
-				if (needsRedraw) {
-					disp_clear();
-					gui_tab_button("Info", 0);
-					gui_tab_button("Graph", 28);
-					gui_tab_button("Mandel", 61);
-					gui_tab_button("Solv", 100);
-					mathinput_redraw(mainScreenInput);
-					mathinput_setCursor(mainScreenInput, CURSOR_ON);
-					// gui test
-					/*gui_set_pixel(0, 0, 1);
-					gui_set_pixel(1, 0, 1);
-					gui_set_pixel(0, 1, 1);
-					gui_draw_line(1, 1, 4, 4);
-					gui_draw_line(5, 0, 5, 4);
-					gui_draw_rect(0, 5, 2, 3, 0);
-					gui_draw_rect(0, 10, 2, 3, 1);
-					gui_draw_rect(0, 15, 4, 4, 0);
-					gui_draw_rect(0, 20, 4, 4, 1);
-					gui_draw_rect(0, 25, 6, 6, 1);
-					gui_clear_rect(1, 26, 4, 4);
-					gui_draw_rect(0, 34, 20, 6, 1);
-					gui_draw_circle(50, 20, 10, 1);
-					gui_clear_rect(45, 21, 4, 3);
-					gui_draw_char(50, 23, 7, FNT_SM, 1);
-					gui_clear_line(50, 15, 55, 16);
-					gui_draw_circle(80, 20, 10, 0);
-					gui_update_byte(0xAA, 29, 8);
-					gui_update_byte(0xAA, 30, 0);
-					gui_update_byte(0xAA, 31, 1);
-					gui_update_byte(0xAA, 32, 2);
-					gui_update_byte(0xAA, 33, 3);
-					gui_update_byte(0xAA, 34, 4);
-					gui_update_byte(0xAA, 35, 5);
-					gui_update_byte(0xAA, 36, 6);
-					gui_update_byte(0xAA, 37, 7);
-					gui_update_byte(0xAA, 38, 8);
-					gui_draw_char(60, 38, 7, FNT_SM, 0);
-					gui_draw_char(70, 39, 7, FNT_SM, 0);
-					gui_draw_char(80, 40, 7, FNT_SM, 0);
-					gui_draw_char(90, 41, 7, FNT_SM, 0);
-					gui_draw_char(100, 42, 7, FNT_SM, 0);
-					gui_draw_char(110, 30, CHAR_MULT, FNT_MD, 0);*/
-				}
-				needsRedraw = 0;
-				mathinput_cursorFrame(mainScreenInput);
-				break;
-			case m_mandelbrot:
-				mandel_draw();
-				break;
-			case m_graph:
-				graph_updateScreen();
-				break;
-			case m_solve_menu:
-				solver_updateScreen();
-				break;
-			case m_applist:
-				applist_updateScreen();
-				break;
-			case m_info:
-				if (needsRedraw) {
-					disp_clear();
-					if (info_mode == 0) {
-						prevAdc = 0;
-						chargingAnimDelay = 50;
-						gui_draw_string("CALCKS", 5, 64 - 44, FNT_MD, 0);
-						gui_draw_string(VERSION_STRING, 5 + 7 * 8, 64 - 44, FNT_MD, 0);
-						gui_draw_string("(c) Liam Braun 2021", 5, 64 - 20, FNT_SM, 0);
-
-						gui_tab_button("About", 0);
-						gui_tab_button("More", 100);
-					} else if (info_mode == 1) {
-						const char *strings[3] = {
-							"CALCKS",
-							"Das Maturprojekt von",
-							"Liam Braun"
-						};
-						for (int i = 0; i < sizeof(strings) / sizeof(char *); i++) {
-							gui_draw_string(strings[i], 0, i * 8, FNT_SM, 0);
-						}
-					} else if (info_mode == 2) {
-						#ifndef console
-						extern unsigned int __data_start;
-						extern unsigned int __data_end;
-						extern unsigned int __bss_start;
-						extern unsigned int __bss_end;
-						extern unsigned int __heap_start;
-
-						u8 stackPointerL = *(u8*)0x005d;
-						u8 stackPointerH = *(u8*)0x005e;
-						sprintf(strBuf, ".data");
-						gui_draw_string(strBuf, 0, 0, FNT_SM, 0);
-						sprintf(strBuf, "%d-%d", (int) &__data_start, (int) & __data_end);
-						gui_draw_string(strBuf, 0, 8, FNT_SM, 0);
-
-						sprintf(strBuf, ".bss");
-						gui_draw_string(strBuf, 0, 18, FNT_SM, 0);
-						sprintf(strBuf, "%d-%d", (int) &__bss_start, (int) &__bss_end);
-						gui_draw_string(strBuf, 0, 26, FNT_SM, 0);
-
-						sprintf(strBuf, "Heap");
-						gui_draw_string(strBuf, 0, 36, FNT_SM, 0);
-						sprintf(strBuf, "%d-%d", (int) &__heap_start, freeRam());
-						gui_draw_string(strBuf, 0, 44, FNT_SM, 0);
-						
-						sprintf(strBuf, "SP = %d", (stackPointerH << 8) + stackPointerL);
-						gui_draw_string(strBuf, 0, 56, FNT_SM, 0);
-						#endif
-					}
-					needsRedraw = 0;
-				}
-				if (info_mode == 0) {
-					infoScreen_battery();
-				}
-		}
 		_delay_ms(10);
 		noInputTimeout += 10;
 		if (noInputTimeout > (long) 1000 * 60 * 2) buttonPressed(off);
+	}
+	#endif
+}
+
+void screen_tick() {
+char specialButtons = buttons_get_special();
+	if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
+		noInputTimeout = 0;
+		buttonPressed(btn_up);
+	}
+	if ((lastSpecialButtonState & BTN_DOWN) && !(specialButtons & BTN_DOWN)) {
+		noInputTimeout = 0;
+		buttonPressed(btn_down);
+	}
+	if ((lastSpecialButtonState & BTN_LEFT) && !(specialButtons & BTN_LEFT)) {
+		noInputTimeout = 0;
+		buttonPressed(btn_left);
+	}
+	if ((lastSpecialButtonState & BTN_RIGHT) && !(specialButtons & BTN_RIGHT)) {
+		noInputTimeout = 0;
+		buttonPressed(btn_right);
+	}
+	lastSpecialButtonState = specialButtons;
+	int btnUnmapped = buttons_getPressed();
+	int currButton = -1;
+	if (btnUnmapped > -1) {
+		noInputTimeout = 0;
+		currButton = BUTTON_MAP[btnUnmapped];
+	}
+	if (currButton != -1) {
+		if (currButton != lastButton) {
+			lastButton = currButton;
+			buttonPressed(currButton);
+		}
+	} else {
+		lastButton = -1;
+	}
+
+	switch (currMode) {
+		case m_calc:
+			if (needsRedraw) {
+				disp_clear();
+				gui_tab_button("Info", 0);
+				gui_tab_button("Graph", 28);
+				gui_tab_button("Mandel", 61);
+				gui_tab_button("Solv", 100);
+				mathinput_redraw(mainScreenInput);
+				mathinput_setCursor(mainScreenInput, CURSOR_ON);
+				// gui test
+				/*gui_set_pixel(0, 0, 1);
+				gui_set_pixel(1, 0, 1);
+				gui_set_pixel(0, 1, 1);
+				gui_draw_line(1, 1, 4, 4);
+				gui_draw_line(5, 0, 5, 4);
+				gui_draw_rect(0, 5, 2, 3, 0);
+				gui_draw_rect(0, 10, 2, 3, 1);
+				gui_draw_rect(0, 15, 4, 4, 0);
+				gui_draw_rect(0, 20, 4, 4, 1);
+				gui_draw_rect(0, 25, 6, 6, 1);
+				gui_clear_rect(1, 26, 4, 4);
+				gui_draw_rect(0, 34, 20, 6, 1);
+				gui_draw_circle(50, 20, 10, 1);
+				gui_clear_rect(45, 21, 4, 3);
+				gui_draw_char(50, 23, 7, FNT_SM, 1);
+				gui_clear_line(50, 15, 55, 16);
+				gui_draw_circle(80, 20, 10, 0);
+				gui_update_byte(0xAA, 29, 8);
+				gui_update_byte(0xAA, 30, 0);
+				gui_update_byte(0xAA, 31, 1);
+				gui_update_byte(0xAA, 32, 2);
+				gui_update_byte(0xAA, 33, 3);
+				gui_update_byte(0xAA, 34, 4);
+				gui_update_byte(0xAA, 35, 5);
+				gui_update_byte(0xAA, 36, 6);
+				gui_update_byte(0xAA, 37, 7);
+				gui_update_byte(0xAA, 38, 8);
+				gui_draw_char(60, 38, 7, FNT_SM, 0);
+				gui_draw_char(70, 39, 7, FNT_SM, 0);
+				gui_draw_char(80, 40, 7, FNT_SM, 0);
+				gui_draw_char(90, 41, 7, FNT_SM, 0);
+				gui_draw_char(100, 42, 7, FNT_SM, 0);
+				gui_draw_char(110, 30, CHAR_MULT, FNT_MD, 0);*/
+			}
+			needsRedraw = 0;
+			mathinput_cursorFrame(mainScreenInput);
+			break;
+		case m_mandelbrot:
+			mandel_draw();
+			break;
+		case m_graph:
+			graph_updateScreen();
+			break;
+		case m_solve_menu:
+			solver_updateScreen();
+			break;
+		case m_applist:
+			applist_updateScreen();
+			break;
+		case m_info:
+			if (needsRedraw) {
+				disp_clear();
+				if (info_mode == 0) {
+					prevAdc = 0;
+					chargingAnimDelay = 50;
+					gui_draw_string("CALCKS", 5, 64 - 44, FNT_MD, 0);
+					gui_draw_string(VERSION_STRING, 5 + 7 * 8, 64 - 44, FNT_MD, 0);
+					gui_draw_string("(c) Liam Braun 2021", 5, 64 - 20, FNT_SM, 0);
+
+					gui_tab_button("About", 0);
+					gui_tab_button("More", 100);
+				} else if (info_mode == 1) {
+					const char *strings[3] = {
+						"CALCKS",
+						"Das Maturprojekt von",
+						"Liam Braun"
+					};
+					for (int i = 0; i < sizeof(strings) / sizeof(char *); i++) {
+						gui_draw_string(strings[i], 0, i * 8, FNT_SM, 0);
+					}
+				} else if (info_mode == 2) {
+					#ifndef console
+					extern unsigned int __data_start;
+					extern unsigned int __data_end;
+					extern unsigned int __bss_start;
+					extern unsigned int __bss_end;
+					extern unsigned int __heap_start;
+
+					u8 stackPointerL = *(u8*)0x005d;
+					u8 stackPointerH = *(u8*)0x005e;
+					sprintf(strBuf, ".data");
+					gui_draw_string(strBuf, 0, 0, FNT_SM, 0);
+					sprintf(strBuf, "%d-%d", (int) &__data_start, (int) & __data_end);
+					gui_draw_string(strBuf, 0, 8, FNT_SM, 0);
+
+					sprintf(strBuf, ".bss");
+					gui_draw_string(strBuf, 0, 18, FNT_SM, 0);
+					sprintf(strBuf, "%d-%d", (int) &__bss_start, (int) &__bss_end);
+					gui_draw_string(strBuf, 0, 26, FNT_SM, 0);
+
+					sprintf(strBuf, "Heap");
+					gui_draw_string(strBuf, 0, 36, FNT_SM, 0);
+					sprintf(strBuf, "%d-%d", (int) &__heap_start, freeRam());
+					gui_draw_string(strBuf, 0, 44, FNT_SM, 0);
+					
+					sprintf(strBuf, "SP = %d", (stackPointerH << 8) + stackPointerL);
+					gui_draw_string(strBuf, 0, 56, FNT_SM, 0);
+					#endif
+				}
+				needsRedraw = 0;
+			}
+			if (info_mode == 0) {
+				infoScreen_battery();
+			}
 	}
 }
 
@@ -383,7 +368,7 @@ void buttonPressed_calc(int buttonID) {
 	if (buttonID == f2) {
 		currMode = m_graph;
 		graph_reset_state();
-		mathinput_buttonPress(mainScreenInput, enter);
+		//mathinput_buttonPress(mainScreenInput, enter);
 		needsRedraw = 1;
 	}
 	if (buttonID == f3) {

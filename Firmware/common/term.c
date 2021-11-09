@@ -456,6 +456,8 @@ double term_evaluate(opNode* startNode, double varVal) {
         case TERM_TAN:
             return tan(value1);
     }
+    // TODO: error out
+    return 0;
 }
 
 symbolField getFields(u8 symbol) {

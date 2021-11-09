@@ -11,7 +11,7 @@ inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
     theBox->cursor = 0;
     theBox->cursorX = x;
     theBox->cursorY = y;
-    theBox->buffer = malloc(maxChars * sizeof(char));
+    theBox->buffer = malloc(maxChars * sizeof(unsigned char));
     memset(theBox->buffer, CHAR_END, theBox->maxChars);
     theBox->length = 0;
     theBox->scroll = 0;

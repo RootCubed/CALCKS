@@ -5,23 +5,27 @@ PORT=/dev/ttyACM0
 
 LDFLAGS = -lm -lpthread
 
+EMCCFLAGS =  --preload-file eepromdata.bin -s EXPORTED_RUNTIME_METHODS='["cwrap"]' -s EXPORTED_FUNCTIONS='["_main", "_press_button", "_get_screen", "_screen_tick", '_malloc']' -s WASM=1
+
 ifeq ($(OS), Windows_NT)
 	SHELL=cmd
 	PORT=COM3
 	LDFLAGS = -lm
 endif
 
-avr-files = avr/buttons.o avr/display.o avr/eep.o avr/uart.o
 common-files = common/*.h
 common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o common/apps.o
-console-files = console/buttons.o console/display.o console/eep.o
+avr-obj = avr/buttons.o avr/display.o avr/eep.o avr/uart.o
+console-obj = console/buttons.o console/display.o console/eep.o
+
+.PHONY: eeprom pre-avr pre-console avr console eeprom upload test
 
 # flash the fuses to lfuse = 0xE7 and hfuse = 0xD1 before flashing the firmware (activates 8 MHz clock and persists EEPROM over reset)
 
 default: eeprom upload
 
 %.o: %.c
-	$(CC) -c $^ $(CCFLAGS)
+	$(CC) -c $^ -o $@ $(CCFLAGS)
 
 pre-avr:
 	$(eval CC = avr-gcc)
@@ -31,25 +35,24 @@ pre-avr:
 	$(eval LDFLAGS = -Wl,-u,vfprintf -lprintf_flt -lm)
 
 pre-console:
-	$(eval CC = gcc)
-	$(eval CCFLAGS = -O0 -Dconsole -g -lm -lpthread)
+	$(eval CC = emcc)
+	$(eval CCFLAGS = -O0 -Dconsole -fPIC)
 
-avr: pre-avr main.o $(avr-files) $(common-obj)
-	$(CC) main.o $(subst avr/,,$(avr-files)) $(subst common/,,$(common-obj)) $(CCFLAGS) $(LDFLAGS) -o main.elf
+avr: pre-avr main.o $(avr-obj) $(common-obj)
+	$(CC) main.o $(avr-obj) $(common-obj) $(CCFLAGS) $(LDFLAGS) -o main.elf
 	$(OBJCOPY) -O ihex main.elf main.hex
 	
-console: pre-console main.o $(console-files) $(common-obj)
-	$(CC) -o server/calc main.o $(subst console/,,$(console-files)) $(subst common/,,$(common-obj)) $(LDFLAGS)
-	cd server && node server.js
+console: pre-console main.o $(console-obj) $(common-obj) eepromdata.bin
+	$(CC) -o server/static/calc.js main.o $(console-obj) $(common-obj) $(LDFLAGS) $(EMCCFLAGS)
 
 eepromprog.hex: pre-avr eepromprog.o $(avr-files)
-	$(CC) eepromprog.o $(CCFLAGS) $(subst avr/,,$(avr-files)) -o eepromprog.elf
+	$(CC) eepromprog.o $(CCFLAGS) $(avr-obj) -o eepromprog.elf
 	$(OBJCOPY) -O ihex eepromprog.elf eepromprog.hex
 
-server/eepromdata.bin: eepromgen/*.png
-	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
+eepromdata.bin: eepromgen/*.png
+	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json eepromdata.bin
 
-eeprom: server/eepromdata.bin
+eeprom: eepromdata.bin
 	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r
 
 upload: avr
@@ -59,6 +62,10 @@ test: pre-console test_term/test_term.o common/term.o
 	$(CC) -g -o test_term/test_term term.o test_term.o $(LDFLAGS)
 
 clean:
-	rm *.o
-	rm *.elf
-	rm *.hex
+	-rm main.o
+	-rm $(avr-obj)
+	-rm $(console-obj)
+	-rm $(common-obj)
+	-rm *.elf
+	-rm *.hex
+	-rm *.bin
