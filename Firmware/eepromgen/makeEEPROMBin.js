@@ -21,7 +21,7 @@ let binaries = [];
 
 for (let projEl of project) {
     console.log(projEl.file);
-    let image = PNG.sync.read(fs.readFileSync(__dirname + "\\" + projEl.file));
+    let image = PNG.sync.read(fs.readFileSync(__dirname + "/" + projEl.file));
     switch (projEl.type) {
         case "fullscreen":
             binaries.push(generateFullscreenBin(image));
