@@ -11,10 +11,12 @@ ifeq ($(OS), Windows_NT)
 	LDFLAGS = -lm
 endif
 
-avr-files = avr/buttons.o avr/display.o avr/eep.o
+avr-files = avr/buttons.o avr/display.o avr/eep.o avr/uart.o
 common-files = common/*.h
-common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o
+common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o common/apps.o
 console-files = console/buttons.o console/display.o console/eep.o
+
+# flash the fuses to lfuse = 0xE7 and hfuse = 0xD1 before flashing the firmware (activates 8 MHz clock and persists EEPROM over reset)
 
 default: eeprom upload
 
@@ -23,8 +25,9 @@ default: eeprom upload
 
 pre-avr:
 	$(eval CC = avr-gcc)
+
 	$(eval MCU = atmega1284p)
-	$(eval CCFLAGS += -std=c99 -mmcu=$(MCU) -O2)
+	$(eval CCFLAGS += -std=c99 -mmcu=$(MCU) -Os)
 	$(eval LDFLAGS = -Wl,-u,vfprintf -lprintf_flt -lm)
 
 pre-console:
@@ -47,10 +50,10 @@ server/eepromdata.bin: eepromgen/*.png
 	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json server/eepromdata.bin
 
 eeprom: server/eepromdata.bin
-	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r -B8
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r
 
 upload: avr
-	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i -B8
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i
 
 test: pre-console test_term/test_term.o common/term.o
 	$(CC) -g -o test_term/test_term term.o test_term.o $(LDFLAGS)
