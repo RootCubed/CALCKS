@@ -439,7 +439,7 @@ void buttonPressed(int buttonID) {
 				disp_clear();
 				needsRedraw = 1;
 			}
-			needsRedraw = applist_buttonPress(buttonID, &currMode);
+			applist_buttonPress(buttonID, &currMode);
 			break;
 		case m_info:
 			if (buttonID == back) {

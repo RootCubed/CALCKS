@@ -23,22 +23,22 @@ void applist_updateScreen() {
     apps_needsRedraw = 0;
 }
 
-int applist_buttonPress(int btn, int *mode) {
+void applist_buttonPress(int btn, int *mode) {
     if (btn == btn_up) {
         if (selectedApp > 0) {
             selectedApp--;
             apps_needsRedraw = 1;
         }
-    }
-    if (btn == btn_down) {
+    } else if (btn == btn_down) {
         if (selectedApp + 1 < sizeof(apps) / sizeof(app)) {
             selectedApp++;
             apps_needsRedraw = 1;
         }
-    }
-    if (btn == enter) {
+    } else if (btn == enter) {
         *mode = apps[selectedApp].mode;
         disp_clear();
         apps_needsRedraw = 1;
+    } else {
+        apps_needsRedraw = 0;
     }
 }

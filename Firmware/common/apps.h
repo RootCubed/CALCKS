@@ -12,6 +12,6 @@ enum modes {
 };
 
 void applist_updateScreen();
-int applist_buttonPress(int, int *);
+void applist_buttonPress(int, int *);
 
 #endif
