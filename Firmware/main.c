@@ -132,7 +132,7 @@ int main(void) {
 	disp_clear();
 
 	while (1) {
-		screenTick();
+		screen_tick();
 
 		_delay_ms(10);
 		noInputTimeout += 10;
@@ -142,7 +142,7 @@ int main(void) {
 }
 
 void screen_tick() {
-char specialButtons = buttons_get_special();
+	char specialButtons = buttons_get_special();
 	if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
 		noInputTimeout = 0;
 		buttonPressed(btn_up);

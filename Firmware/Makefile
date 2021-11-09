@@ -53,7 +53,7 @@ eepromdata.bin: eepromgen/*.png
 	node eepromgen/makeEEPROMBin.js eepromgen/calcks.json eepromdata.bin
 
 eeprom: eepromdata.bin
-	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"server/eepromdata.bin":r
+	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U eeprom:w:"eepromdata.bin":r
 
 upload: avr
 	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i
