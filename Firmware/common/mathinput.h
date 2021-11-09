@@ -17,6 +17,8 @@ typedef struct {
     int posY;
     char *buffer;
     int cursor;
+    int cursorX;
+    int cursorY;
     int scroll;
     int length;
     int cursorBlinkState;
@@ -28,6 +30,7 @@ inputBox *mathinput_initBox(int, int, int, int);
 void mathinput_freeBox(inputBox *);
 
 void mathinput_redraw(inputBox *);
+void mathinput_drawChar(inputBox *, u8, int *, int *, int);
 
 void mathinput_buttonPress(inputBox *, int);
 
