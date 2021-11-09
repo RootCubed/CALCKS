@@ -12,7 +12,7 @@ const char BUTTON_MAP[35] = {
 	-1,         four,    five,         six,            minus,
 	-1,         seven,   eight,        nine,           multiply,
 	exponent,   -1,      bracket_open, bracket_close,  divide,
-    -1,         btn_sin, btn_cos,      btn_tan,        del,
+    btn_apps,   btn_sin, btn_cos,      btn_tan,        del,
     f1,         f2,      f3,           f4,
 	back
 };

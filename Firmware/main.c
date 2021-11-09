@@ -7,10 +7,12 @@
 #include "common/eep.h"
 #include "common/gui.h"
 #include "common/term.h"
+#include "common/apps.h"
 #include "common/mandel.h"
 #include "common/graph.h"
 #include "common/mathinput.h"
 #include "common/solver.h"
+#include "common/uart.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -59,15 +61,6 @@
 #define BTN_DOWN 0b01000000
 #define BTN_RIGHT 0b00100000
 
-enum modes {
-	m_calc,
-	m_mandelbrot,
-	m_graph,
-	m_solve_menu,
-	m_info,
-	m_error
-};
-
 char resBuf[0x20];
 int lastButton = -1;
 int lastSpecialButtonState = 0xFFFF;
@@ -112,9 +105,7 @@ void wdt_init(void)
     return;
 }*/
 
-// https://jeelabs.org/2011/05/22/atmega-memory-use/
 int freeRam() {
-	//extern int __heap_start, *__brkval;
 	int *v = malloc(1);
 	free(v);
 	return (int) v;
@@ -156,6 +147,7 @@ int main(void) {
 	ADCSRA |= _BV(ADEN); // enable ADC
 	ADCSRA |= (0b100 << ADPS0); // prescaler 16
 
+    uart_init();
 	#endif
 	
 	noInputTimeout = 0;
@@ -164,19 +156,19 @@ int main(void) {
 		char specialButtons = buttons_get_special();
 		if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
 			noInputTimeout = 0;
-			buttonPressed(up);
+			buttonPressed(btn_up);
 		}
 		if ((lastSpecialButtonState & BTN_DOWN) && !(specialButtons & BTN_DOWN)) {
 			noInputTimeout = 0;
-			buttonPressed(down);
+			buttonPressed(btn_down);
 		}
 		if ((lastSpecialButtonState & BTN_LEFT) && !(specialButtons & BTN_LEFT)) {
 			noInputTimeout = 0;
-			buttonPressed(left);
+			buttonPressed(btn_left);
 		}
 		if ((lastSpecialButtonState & BTN_RIGHT) && !(specialButtons & BTN_RIGHT)) {
 			noInputTimeout = 0;
-			buttonPressed(right);
+			buttonPressed(btn_right);
 		}
 		lastSpecialButtonState = specialButtons;
 		int btnUnmapped = buttons_getPressed();
@@ -251,6 +243,9 @@ int main(void) {
 			case m_solve_menu:
 				solver_updateScreen();
 				break;
+			case m_applist:
+				applist_updateScreen();
+				break;
 			case m_info:
 				if (needsRedraw) {
 					disp_clear();
@@ -307,7 +302,6 @@ int main(void) {
 					infoScreen_battery();
 				}
 		}
-
 		_delay_ms(10);
 		noInputTimeout += 10;
 		if (noInputTimeout > (long) 1000 * 60 * 2) buttonPressed(off);
@@ -434,6 +428,11 @@ void buttonPressed(int buttonID) {
 
 		noInputTimeout = 0;
 	}
+	if (buttonID == btn_apps) {
+		currMode = m_applist;
+		disp_clear();
+		return;
+	}
 	switch (currMode) {
 		case m_calc:
 			buttonPressed_calc(buttonID);
@@ -448,6 +447,14 @@ void buttonPressed(int buttonID) {
 				disp_clear();
 				needsRedraw = 1;
 			}
+			break;
+		case m_applist:
+			if (buttonID == back) {
+				currMode = m_calc;
+				disp_clear();
+				needsRedraw = 1;
+			}
+			needsRedraw = applist_buttonPress(buttonID, &currMode);
 			break;
 		case m_info:
 			if (buttonID == back) {

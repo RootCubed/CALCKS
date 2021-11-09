@@ -137,6 +137,14 @@ void convert_string(const char *str, char *buf) {
                 case '%':
                     buf[i] = CHAR_PERCENT;
                     break;
+                case '$':
+                    buf[i] = CHAR_DOLLAR;
+                    break;
+                case ',':
+                    buf[i] = CHAR_COMMA;
+                    break;
+                default:
+                    buf[i] = CHAR_QUESTION_MARK;
             }
         }
         i++;
@@ -152,7 +160,11 @@ int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverte
         if (realStringBuf[i] != -1) {
             gui_draw_char(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
         } else {
-            gui_clear_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3]);
+            if (isInverted) {
+                gui_draw_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3], 1);
+            } else {
+                gui_clear_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3]);
+            }
         }
         i++;
     }

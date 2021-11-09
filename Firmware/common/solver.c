@@ -155,7 +155,7 @@ int solver_buttonPress(int buttonID) {
         mathinput_setCursor(solver_s.c, CURSOR_HIDDEN);
         return 0;
     }
-    if (buttonID == left && solver_s.currentSelected == -1) {
+    if (buttonID == btn_left && solver_s.currentSelected == -1) {
         if (solver_s.solveType == SOLV_QUADRATIC) {
             solver_s.solveType = SOLV_LINEAR;
             solver_needsRedraw = 1;
@@ -164,7 +164,7 @@ int solver_buttonPress(int buttonID) {
             mathinput_clear(solver_s.c);
         }
     }
-    if (buttonID == right && solver_s.currentSelected == -1) {
+    if (buttonID == btn_right && solver_s.currentSelected == -1) {
         if (solver_s.solveType == SOLV_LINEAR) {
             solver_s.solveType = SOLV_QUADRATIC;
             solver_needsRedraw = 1;
@@ -175,7 +175,7 @@ int solver_buttonPress(int buttonID) {
     }
     if (solver_s.currentSelected == 0) {
         mathinput_buttonPress(solver_s.a, buttonID);
-        if (buttonID == enter || buttonID == up || buttonID == down) {
+        if (buttonID == enter || buttonID == btn_up || buttonID == btn_down) {
             if (mathinput_checkSyntax(solver_s.a) == 1) {
                 solver_needsRedraw = 1;
                 return 1;
@@ -184,7 +184,7 @@ int solver_buttonPress(int buttonID) {
     }
     if (solver_s.currentSelected == 1) {
         mathinput_buttonPress(solver_s.b, buttonID);
-        if (buttonID == enter || buttonID == up || buttonID == down) {
+        if (buttonID == enter || buttonID == btn_up || buttonID == btn_down) {
             if (mathinput_checkSyntax(solver_s.b) == 1) {
                 solver_needsRedraw = 1;
                 return 1;
@@ -193,7 +193,7 @@ int solver_buttonPress(int buttonID) {
     }
     if (solver_s.solveType == SOLV_QUADRATIC && solver_s.currentSelected == 2) {
         mathinput_buttonPress(solver_s.c, buttonID);
-        if (buttonID == enter || buttonID == up || buttonID == down) {
+        if (buttonID == enter || buttonID == btn_up || buttonID == btn_down) {
             if (mathinput_checkSyntax(solver_s.c) == 1) {
                 solver_needsRedraw = 1;
                 return 1;
@@ -201,13 +201,13 @@ int solver_buttonPress(int buttonID) {
         }
     }
 
-    if (buttonID == enter || buttonID == down) {
+    if (buttonID == enter || buttonID == btn_down) {
         if (solver_s.currentSelected < 3 || (solver_s.solveType == SOLV_QUADRATIC && solver_s.currentSelected < 4))
         solver_s.currentSelected++;
         solver_needsRedraw = 1;
     }
 
-    if (buttonID == up) {
+    if (buttonID == btn_up) {
         if (solver_s.currentSelected > -1) {
             solver_s.currentSelected--;
             solver_needsRedraw = 1;

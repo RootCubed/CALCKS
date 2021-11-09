@@ -6,7 +6,7 @@
 
 #include "../common/eep.h"
 
-#define F_CPU 16000000UL
+#define F_CPU 8000000UL
 #define BAUD 9600
 
 
@@ -20,36 +20,7 @@ char flBuf[5];
 
 int counter = 0;
 
-void uart_init(void) {
-	UBRR0H = UBRRH_VALUE;
-	UBRR0L = UBRRL_VALUE;
-
-	UCSR0A &= ~(_BV(U2X0));
-
-	UCSR0C = _BV(UCSZ01) | _BV(UCSZ00); /* 8-bit data */
-	UCSR0B = _BV(RXEN0) | _BV(TXEN0);   /* Enable RX and TX */
-}
-
-char uart_getbyte() {
-	loop_until_bit_is_set(UCSR0A, RXC0);
-	return UDR0;
-}
-
-void uart_putbyte(char c) {
-	loop_until_bit_is_set(UCSR0A, UDRE0);
-	UDR0 = c;
-}
-
-void uart_print(const char *str) {
-	int ptr = 0;
-	while (str[ptr] != '\0') {
-		uart_putbyte(str[ptr]);
-		ptr++;
-	}
-}
-
 void eep_initialize() {
-	uart_init();
 	//set SCL to 400kHz
 	TWSR = 0x00;
 	TWBR = 0x0C;
