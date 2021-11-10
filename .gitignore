@@ -13,6 +13,7 @@ Firmware/eepromgen/node_modules
 Firmware/server/static/calc.wasm
 Firmware/server/static/calc.data
 Firmware/server/static/calc.js
+Firmware/test_term/*.o
 Firmware/test_term/test_term
 Firmware/test_term/test_term.exe
 AdditionalPrograms/*/node_modules

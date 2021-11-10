@@ -1,5 +1,6 @@
 OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
+CC = gcc
 
 PORT=/dev/ttyACM0
 
@@ -58,8 +59,10 @@ eeprom: eepromdata.bin
 upload: avr
 	$(AVRDUDE) -v -p atmega1284 -c avrisp -P $(PORT) -b 57600 -U flash:w:"main.hex":i
 
-test: pre-console test_term/test_term.o common/term.o
-	$(CC) -g -o test_term/test_term term.o test_term.o $(LDFLAGS)
+test:
+	$(CC) -o test_term/test_term.o -c test_term/test_term.c $(CCFLAGS)
+	$(CC) -o test_term/term.o -c common/term.c $(CCFLAGS)
+	$(CC) -g -o test_term/test_term test_term/term.o test_term/test_term.o $(LDFLAGS)
 
 clean:
 	-rm main.o
