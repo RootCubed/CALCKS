@@ -30,7 +30,7 @@ void solver_solveLinear() {
 
 void solver_redrawScreenLinear() {
     if (solver_s.currentSelected == 3) {
-        disp_clear();
+        gui_clear_screen();
         mathinput_buttonPress(solver_s.a, enter);
         mathinput_buttonPress(solver_s.b, enter);
 
@@ -81,7 +81,7 @@ void solver_solveQuadratic() {
 
 void solver_redrawScreenQuadratic() {
     if (solver_s.currentSelected == 4) {
-        disp_clear();
+        gui_clear_screen();
         mathinput_buttonPress(solver_s.a, enter);
         mathinput_buttonPress(solver_s.b, enter);
         mathinput_buttonPress(solver_s.c, enter);
@@ -130,7 +130,7 @@ void solver_redrawScreenQuadratic() {
 
 void solver_updateScreen() {
     if (solver_needsRedraw) {
-        disp_clear();
+        gui_clear_screen();
         switch (solver_s.solveType) {
             case SOLV_LINEAR:
                 solver_redrawScreenLinear();

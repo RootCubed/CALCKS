@@ -329,6 +329,10 @@ void gui_clear_rect(int x, int y, int width, int height) {
     }
 }
 
+void gui_clear_screen() {
+    disp_clear();
+}
+
 int gui_tab_button(const char *tabName, int xPos) {
     gui_draw_byte(0b11111110, xPos, 56);
     int length = gui_draw_string(tabName, xPos + 1, 56, FNT_SM, 1);

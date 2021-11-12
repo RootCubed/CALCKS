@@ -36,7 +36,7 @@ void applist_buttonPress(int btn, int *mode) {
         }
     } else if (btn == enter) {
         *mode = apps[selectedApp].mode;
-        disp_clear();
+        gui_clear_screen();
         apps_needsRedraw = 1;
     } else {
         apps_needsRedraw = 0;

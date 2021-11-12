@@ -1,6 +1,5 @@
 #include "graph.h"
 #include "term.h"
-#include "display.h"
 #include "gui.h"
 #include "mathinput.h"
 
@@ -27,7 +26,7 @@ void graph_updateScreen() {
     double rangeY1 = 10;
     double rangeY2 = -10;
     if (!graph_hasDrawn) {
-        disp_clear();
+        gui_clear_screen();
 
         double transfX0 = map(0, rangeX1, rangeX2, 0, SCREEN_WIDTH);
         double transfY0 = map(0, rangeY1, rangeY2, 0, 64);

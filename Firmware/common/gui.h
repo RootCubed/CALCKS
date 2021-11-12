@@ -55,6 +55,7 @@ void gui_clear_line(int, int, int, int);
 void gui_draw_rect(int, int, int, int, int);
 void gui_draw_circle(int, int, int, int);
 void gui_clear_rect(int, int, int, int);
+void gui_clear_screen();
 int gui_tab_button(const char *, int);
 
 typedef struct {

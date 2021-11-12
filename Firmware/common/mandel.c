@@ -1,6 +1,5 @@
 #include "mandel.h"
 #include "gui.h"
-#include "display.h"
 
 int mandel_hasDrawn = 0;
 
@@ -13,7 +12,7 @@ typedef struct {
 
 void mandel_draw() {
     if (!mandel_hasDrawn) {
-        disp_clear();
+        gui_clear_screen();
         complex z, c, newZ;
         for (int y = 0; y < 64; y++) {
             for (int x = 0; x < 128; x++) {

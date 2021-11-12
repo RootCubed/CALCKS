@@ -129,7 +129,7 @@ int main(void) {
 	#ifndef console
 
 	_delay_ms(2000);
-	disp_clear();
+	gui_clear_screen();
 
 	while (1) {
 		screen_tick();
@@ -178,7 +178,7 @@ void screen_tick() {
 	switch (currMode) {
 		case m_calc:
 			if (needsRedraw) {
-				disp_clear();
+				gui_clear_screen();
 				gui_tab_button("Info", 0);
 				gui_tab_button("Graph", 28);
 				gui_tab_button("Mandel", 61);
@@ -237,7 +237,7 @@ void screen_tick() {
 			break;
 		case m_info:
 			if (needsRedraw) {
-				disp_clear();
+				gui_clear_screen();
 				if (info_mode == 0) {
 					prevAdc = 0;
 					chargingAnimDelay = 50;
@@ -295,7 +295,7 @@ void screen_tick() {
 
 void errorScreen(char *errorText) {
 	screenBeforeError = currMode;
-	disp_clear();
+	gui_clear_screen();
 	gui_draw_string(errorText, (SCREEN_WIDTH - 13 * fonts[FNT_MD][2]) / 2, 24, FNT_MD, 0);
 	gui_draw_string("OK", (SCREEN_WIDTH - 3 * fonts[FNT_SM][2]) / 2, 50, FNT_SM, 1);
 	currMode = m_error;
@@ -415,7 +415,7 @@ void buttonPressed(int buttonID) {
 	}
 	if (buttonID == btn_apps) {
 		currMode = m_applist;
-		disp_clear();
+		gui_clear_screen();
 		return;
 	}
 	switch (currMode) {
@@ -429,14 +429,14 @@ void buttonPressed(int buttonID) {
 		case m_mandelbrot:
 			if (buttonID == back) {
 				currMode = m_calc;
-				disp_clear();
+				gui_clear_screen();
 				needsRedraw = 1;
 			}
 			break;
 		case m_applist:
 			if (buttonID == back) {
 				currMode = m_calc;
-				disp_clear();
+				gui_clear_screen();
 				needsRedraw = 1;
 			}
 			applist_buttonPress(buttonID, &currMode);
@@ -445,7 +445,7 @@ void buttonPressed(int buttonID) {
 			if (buttonID == back) {
 				if (info_mode == 0) {
 					currMode = m_calc;
-					disp_clear();
+					gui_clear_screen();
 				} else {
 					info_mode = 0;
 				}
@@ -453,7 +453,7 @@ void buttonPressed(int buttonID) {
 			}
 			if (info_mode == 0) {
 				if (buttonID == bracket_open) {
-					disp_clear();
+					gui_clear_screen();
 					gui_draw_string("     Hello      ", 0, 64 - 48, FNT_MD, 0);
 					gui_draw_string("   @Brammyson   ", 0, 64 - 32, FNT_MD, 0);
 					gui_draw_string("   @Kaoskarl    ", 0, 64 - 16, FNT_MD, 0);
@@ -471,7 +471,7 @@ void buttonPressed(int buttonID) {
 		case m_solve_menu:
 			if (buttonID == back) {
 				currMode = m_calc;
-				disp_clear();
+				gui_clear_screen();
 				needsRedraw = 1;
 			}
 			if (solver_buttonPress(buttonID) != 0) {
