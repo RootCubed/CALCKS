@@ -1,5 +1,7 @@
 #include "term.h"
 #include "types.h"
+#include "exception.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -456,8 +458,7 @@ double term_evaluate(opNode* startNode, double varVal) {
         case TERM_TAN:
             return tan(value1);
     }
-    // TODO: error out
-    return 0;
+    PANIC("Invalid operation");
 }
 
 symbolField getFields(u8 symbol) {

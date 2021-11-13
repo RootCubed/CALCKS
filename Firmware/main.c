@@ -13,6 +13,7 @@
 #include "common/mathinput.h"
 #include "common/solver.h"
 #include "common/uart.h"
+#include "common/exception.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -54,7 +55,7 @@ char strBuf[64];
 inputBox *mainScreenInput;
 int needsClearRes = 0;
 
-int currMode = m_calc;
+int currMode;
 int needsRedraw = 1;
 
 int prevAdc = 0;
@@ -65,7 +66,7 @@ long noInputTimeout = 0;
 
 int screenBeforeError;
 
-int info_mode = 0;
+int info_mode;
 
 void buttonPressed(int);
 void infoScreen_battery();
@@ -78,8 +79,7 @@ void screen_tick();
 // https://stackoverflow.com/questions/32802221/how-to-write-a-custom-reset-function-in-c-for-avr-studio
 
 // Function Prototype
-/*void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
-
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
 // Function Implementation
 void wdt_init(void)
@@ -88,7 +88,7 @@ void wdt_init(void)
     wdt_disable();
 
     return;
-}*/
+}
 
 int freeRam() {
 	int *v = malloc(1);
@@ -108,12 +108,14 @@ int main(void) {
 	
 	buttons_initialize();
 
-	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0);
+	mainScreenInput = mathinput_initBox(FNT_MD, 100, 0, 0, SCREEN_WIDTH);
 	term_init();
 	solver_init();
 	graph_init();
 
 	#ifndef console
+	wdt_init();
+
 	// init ADC
 	ADMUX = (0x01 << REFS0) /* AVCC with external capacitor at AREF pin */
 			| (0 << ADLAR) /* Left Adjust Result: disabled */
@@ -125,6 +127,8 @@ int main(void) {
 	#endif
 	
 	noInputTimeout = 0;
+	currMode = m_calc;
+	info_mode = 0;
 
 	#ifndef console
 
@@ -142,6 +146,10 @@ int main(void) {
 }
 
 void screen_tick() {
+	if (setjmp(exception_state) == 1) {
+		currMode = m_exception;
+	}
+
 	char specialButtons = buttons_get_special();
 	if ((lastSpecialButtonState & BTN_UP) && !(specialButtons & BTN_UP)) {
 		noInputTimeout = 0;
@@ -248,14 +256,9 @@ void screen_tick() {
 					gui_tab_button("About", 0);
 					gui_tab_button("More", 100);
 				} else if (info_mode == 1) {
-					const char *strings[3] = {
-						"CALCKS",
-						"Das Maturprojekt von",
-						"Liam Braun"
-					};
-					for (int i = 0; i < sizeof(strings) / sizeof(char *); i++) {
-						gui_draw_string(strings[i], 0, i * 8, FNT_SM, 0);
-					}
+					const char *build_info = "Build date:\n" \
+					__DATE__ " " __TIME__;
+					gui_draw_string(build_info, 0, 0, FNT_SM, 0);
 				} else if (info_mode == 2) {
 					#ifndef console
 					extern unsigned int __data_start;
@@ -290,6 +293,8 @@ void screen_tick() {
 			if (info_mode == 0) {
 				infoScreen_battery();
 			}
+		case m_exception:
+			break;
 	}
 }
 
@@ -386,6 +391,14 @@ void buttonPressed_calc(int buttonID) {
 }
 
 void buttonPressed(int buttonID) {
+	if (currMode == m_exception) {
+		// reset
+		#ifndef console
+		wdt_enable(WDTO_15MS);
+		#else
+		main();
+		#endif
+	}
 	if (buttonID == off) {
 		// put display into sleep mode (turn display off, turn all points on)
 

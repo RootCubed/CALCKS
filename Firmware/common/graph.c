@@ -8,7 +8,7 @@ int graph_shouldPlot = 0;
 inputBox *graphInput;
 
 void graph_init() {
-    graphInput = mathinput_initBox(FNT_SM, 30, 5 * fonts[FNT_SM][FNT_WIDTH], 64 - fonts[FNT_SM][FNT_HEIGHT]);
+    graphInput = mathinput_initBox(FNT_SM, 30, 5 * fonts[FNT_SM][FNT_WIDTH], 64 - fonts[FNT_SM][FNT_HEIGHT], SCREEN_WIDTH);
 }
 
 double map(double value, double i1, double i2, double o1, double o2) {

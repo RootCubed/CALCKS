@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
-inputBox *mathinput_initBox(int font, int maxChars, int x, int y) {
+inputBox *mathinput_initBox(int font, int maxChars, int x, int y, int xEnd) {
     inputBox *theBox = malloc(sizeof(inputBox));
     theBox->font = font;
     theBox->maxChars = maxChars;
     theBox->posX = x;
     theBox->posY = y;
+    theBox->width = xEnd - x;
     theBox->cursor = 0;
     theBox->cursorX = x;
     theBox->cursorY = y;
@@ -274,7 +275,7 @@ void mathinput_setCursor(inputBox *box, int onOff) {
 }
 
 void mathinput_clear(inputBox *box) {
-    gui_clear_rect(box->posX, box->posY, box->length * fonts[box->font][FNT_WIDTH], fonts[box->font][FNT_HEIGHT] + 1); // height + 1 because of inverted text taking up one more space
+    gui_clear_rect(box->posX, box->posY, box->width, fonts[box->font][FNT_HEIGHT] + 1); // height + 1 because of inverted text taking up one more space
     box->scroll = 0;
     box->cursor = 0;
     box->length = 0;

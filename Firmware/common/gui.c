@@ -56,6 +56,7 @@ void gui_remove_byte(char bt, int x, int y) {
 }
 
 void gui_draw_char(int xPos, int yPos, int num, int font, int isInverted) {
+    if (num == CHAR_LINE_BREAK) num = CHAR_QUESTION_MARK;
 	int fontWidth = fonts[font][2];
 	int fontByteWidth = 1;
 	int fontHeight = fonts[font][3];
@@ -143,6 +144,9 @@ void convert_string(const char *str, char *buf) {
                 case ',':
                     buf[i] = CHAR_COMMA;
                     break;
+                case '\n':
+                    buf[i] = CHAR_LINE_BREAK;
+                    break;
                 default:
                     buf[i] = CHAR_QUESTION_MARK;
             }
@@ -153,18 +157,24 @@ void convert_string(const char *str, char *buf) {
 }
 
 int gui_draw_string(const char *str, int xPos, int yPos, int font, int isInverted) {
+    int currX = xPos;
     convert_string(str, realStringBuf);
     int len = realStringBuf[0];
     int i = 1;
     while (i < len) {
-        if (realStringBuf[i] != -1) {
-            gui_draw_char(xPos + (i - 1) * fonts[font][2], yPos, realStringBuf[i], font, isInverted);
+        if (realStringBuf[i] == CHAR_LINE_BREAK) {
+            yPos += fonts[font][FNT_HEIGHT];
+            currX = xPos;
+        } else if (realStringBuf[i] != -1) {
+            gui_draw_char(currX, yPos, realStringBuf[i], font, isInverted);
+            currX += fonts[font][FNT_WIDTH];
         } else {
             if (isInverted) {
-                gui_draw_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3], 1);
+                gui_draw_rect(currX, yPos, fonts[font][FNT_WIDTH], fonts[font][FNT_HEIGHT] + 1, 1);
             } else {
-                gui_clear_rect(xPos + (i - 1) * fonts[font][2], yPos, fonts[font][2], fonts[font][3]);
+                gui_clear_rect(currX, yPos, fonts[font][FNT_WIDTH], fonts[font][FNT_HEIGHT] + 1);
             }
+            currX += fonts[font][FNT_WIDTH];
         }
         i++;
     }

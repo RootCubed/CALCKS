@@ -1,6 +1,12 @@
 #include "../common/term.h"
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
+
+void exception_call(char *msg) {
+    printf("Exception occured: %s\nAborting...\n", msg);
+    exit(-1);
+}
 
 int evalterm(u8 *input, double varVal, double *out) {
     int syntaxErrRes = term_checkSyntax(input);

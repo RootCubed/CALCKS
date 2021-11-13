@@ -15,6 +15,7 @@ typedef struct {
     int maxChars;
     int posX;
     int posY;
+    int width;
     unsigned char *buffer;
     int cursor;
     int cursorX;
@@ -25,7 +26,7 @@ typedef struct {
     int cursorFrameCount;
 } inputBox;
 
-inputBox *mathinput_initBox(int, int, int, int);
+inputBox *mathinput_initBox(int, int, int, int, int);
 
 void mathinput_freeBox(inputBox *);
 

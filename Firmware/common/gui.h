@@ -37,6 +37,8 @@
 #define CHAR_COMMA 80
 #define CHAR_QUESTION_MARK 81
 
+#define CHAR_LINE_BREAK 127
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 

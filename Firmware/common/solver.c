@@ -7,9 +7,9 @@ int solver_needsRedraw = 1;
 int blinkCounter = 0;
 
 void solver_init() {
-    solver_s.a = mathinput_initBox(FNT_SM, 40, 13, 10);
-    solver_s.b = mathinput_initBox(FNT_SM, 40, 13, 20);
-    solver_s.c = mathinput_initBox(FNT_SM, 40, 13, 30);
+    solver_s.a = mathinput_initBox(FNT_SM, 40, 13, 10, SCREEN_WIDTH);
+    solver_s.b = mathinput_initBox(FNT_SM, 40, 13, 20, SCREEN_WIDTH);
+    solver_s.c = mathinput_initBox(FNT_SM, 40, 13, 30, SCREEN_WIDTH);
     solver_s.currentSelected = 0;
     solver_s.solveType = SOLV_LINEAR;
 }

@@ -8,7 +8,8 @@ enum modes {
 	m_solve_menu,
 	m_info,
 	m_error,
-    m_applist
+    m_applist,
+	m_exception
 };
 
 void applist_updateScreen();

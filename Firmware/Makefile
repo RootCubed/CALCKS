@@ -6,7 +6,8 @@ PORT=/dev/ttyACM0
 
 LDFLAGS = -lm -lpthread
 
-EMCCFLAGS =  --preload-file eepromdata.bin -s EXPORTED_RUNTIME_METHODS='["cwrap"]' -s EXPORTED_FUNCTIONS='["_main", "_press_button", "_get_screen", "_screen_tick", '_malloc']' -s WASM=1
+EMCCFLAGS =  --preload-file eepromdata.bin -fwasm-exceptions -Wl,--trace-symbol=setjmp \
+	-s EXPORTED_RUNTIME_METHODS='["cwrap"]' -s EXPORTED_FUNCTIONS='["_main", "_press_button", "_get_screen", "_screen_tick", '_malloc']' -s WASM=1
 
 ifeq ($(OS), Windows_NT)
 	SHELL=cmd
@@ -15,7 +16,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 common-files = common/*.h
-common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o common/apps.o
+common-obj = common/gui.o common/term.o common/mandel.o common/graph.o common/mathinput.o common/solver.o common/apps.o common/exception.o
 avr-obj = avr/buttons.o avr/display.o avr/eep.o avr/uart.o
 console-obj = console/buttons.o console/display.o console/eep.o
 
